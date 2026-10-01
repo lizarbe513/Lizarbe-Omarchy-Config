@@ -98,7 +98,13 @@ if [[ $# -gt 0 ]]; then
         esac
     done
 else
-    # Modo interactivo
+    # Si estamos en una terminal interactiva y lizarbe_tui está disponible, abrir la interfaz TUI en Suites
+    if [[ -t 0 && -d "$SCRIPT_DIR/lizarbe_tui" ]] && command -v python3 &>/dev/null; then
+        export PYTHONPATH="$SCRIPT_DIR:${PYTHONPATH:-}"
+        exec python3 -m lizarbe_tui.cli --section suites
+    fi
+
+    # Modo interactivo de respaldo en consola
     echo -e "${CYAN}"
     echo "====================================================="
     echo "     OMARCHY - SETUP CREATIVO & CONSTRUCCIÓN         "
@@ -180,7 +186,7 @@ success "=============================================================="
 success " ¡Instalación completada! Tu entorno Omarchy está listo."
 success "=============================================================="
 echo ""
-echo -e "${YELLOW}📌 Cómo aplicar el tema GTK Darky en Omarchy:${NC}"
+echo -e "${YELLOW}[INFO] Cómo aplicar el tema GTK Darky en Omarchy:${NC}"
 echo -e "   1. Presiona ${CYAN}Super + Espacio${NC} para abrir el lanzador de aplicaciones."
 echo -e "   2. Escribe y abre ${CYAN}nwg-look${NC}."
 echo -e "   3. En la pestaña ${CYAN}Widget${NC}, selecciona ${CYAN}Darky${NC}."

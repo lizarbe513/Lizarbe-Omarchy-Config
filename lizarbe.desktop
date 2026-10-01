@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Lizarbe Theme
+GenericName=Gestor de Tema y Suites Lizarbe
+Comment=Panel TUI para gestionar el Tema Lizarbe, Apariencia y Suites de Software en Omarchy
+Exec=omarchy-launch-tui --app-id=org.omarchy.lizarbe lizarbe-tui
+Icon=preferences-desktop-theme
+Terminal=false
+Type=Application
+Categories=Settings;DesktopSettings;System;
+Keywords=lizarbe;omarchy;theme;tema;suites;config;tui;hyprland;

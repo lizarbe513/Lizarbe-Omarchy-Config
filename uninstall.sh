@@ -120,13 +120,15 @@ uninstall_theme() {
         fi
     done
 
-    # 7. Eliminar binarios de la aplicación Lizarbe y hooks
-    info "Eliminando binarios y hooks de la aplicación Lizarbe..."
-    $SUDO rm -f "/usr/local/bin/lizarbe" "/usr/local/bin/lizarbe-update" "/usr/local/bin/lizarbe-apply-user" 2>/dev/null || true
+    # 7. Eliminar binarios de la aplicación Lizarbe, entrada .desktop y hooks
+    info "Eliminando binarios, entrada de aplicaciones y hooks de Lizarbe..."
+    $SUDO rm -f "/usr/local/bin/lizarbe" "/usr/local/bin/lizarbe-tui" "/usr/local/bin/lizarbe-update" "/usr/local/bin/lizarbe-apply-user" 2>/dev/null || true
+    $SUDO rm -f "/usr/share/applications/lizarbe.desktop" 2>/dev/null || true
     $SUDO rm -f "/etc/pacman.d/hooks/00-lizarbe-update.hook" 2>/dev/null || true
     $SUDO rm -f "/etc/skel/.config/omarchy/hooks/post-update.d/00-lizarbe-update.hook" 2>/dev/null || true
     rm -f "$HOME/.config/omarchy/hooks/post-update.d/00-lizarbe-update.hook" 2>/dev/null || true
-    rm -f "$HOME/.local/bin/lizarbe" "$HOME/.local/bin/lizarbe-update" "$HOME/.local/bin/lizarbe-apply-user" 2>/dev/null || true
+    rm -f "$HOME/.local/bin/lizarbe" "$HOME/.local/bin/lizarbe-tui" "$HOME/.local/bin/lizarbe-update" "$HOME/.local/bin/lizarbe-apply-user" 2>/dev/null || true
+    rm -f "$HOME/.local/share/applications/lizarbe.desktop" 2>/dev/null || true
 
     success "Tema Lizarbe revertido y desinstalado exitosamente de la raíz y usuario."
 }
@@ -150,10 +152,15 @@ UNINSTALL_DEV=false
 UNINSTALL_OFFICE=false
 UNINSTALL_MULTIMEDIA=false
 UNINSTALL_WEBAPPS=false
+AUTO_CONFIRM=false
 
 if [[ $# -gt 0 ]]; then
     while [[ $# -gt 0 ]]; do
         case "$1" in
+            --yes|-y)
+                AUTO_CONFIRM=true
+                shift
+                ;;
             --all)
                 UNINSTALL_THEME=true
                 UNINSTALL_2D=true
@@ -213,7 +220,13 @@ if [[ $# -gt 0 ]]; then
         esac
     done
 else
-    # Modo interactivo
+    # Si estamos en una terminal interactiva y lizarbe_tui está disponible, abrir la interfaz TUI en Desinstalación
+    if [[ -t 0 && -d "$SCRIPT_DIR/lizarbe_tui" ]] && command -v python3 &>/dev/null; then
+        export PYTHONPATH="$SCRIPT_DIR:${PYTHONPATH:-}"
+        exec python3 -m lizarbe_tui.cli --section uninstall
+    fi
+
+    # Modo interactivo de respaldo en consola
     echo -e "${RED}"
     echo "====================================================="
     echo "       OMARCHY - DESINSTALADOR DE SUITE LIZARBE      "
@@ -279,10 +292,12 @@ echo -e "  - Suite Multimedia:          $([[ "$UNINSTALL_MULTIMEDIA" == true ]] 
 echo -e "  - Webapps:                   $([[ "$UNINSTALL_WEBAPPS" == true ]] && echo -e "${RED}DESINSTALAR${NC}" || echo -e "${GREEN}CONSERVAR${NC}")"
 echo ""
 
-read -rp "¿Confirmas la desinstalación de los elementos seleccionados? [s/N]: " confirm
-if [[ ! "$confirm" =~ ^[SsYy]$ ]]; then
-    warn "Operación cancelada por el usuario. No se realizaron cambios."
-    exit 0
+if [[ "$AUTO_CONFIRM" == false ]]; then
+    read -rp "¿Confirmas la desinstalación de los elementos seleccionados? [s/N]: " confirm
+    if [[ ! "$confirm" =~ ^[SsYy]$ ]]; then
+        warn "Operación cancelada por el usuario. No se realizaron cambios."
+        exit 0
+    fi
 fi
 
 [[ "$UNINSTALL_2D" == true ]]         && remove_pkg_file "$SCRIPT_DIR/packages/pkgs-2d.txt" "Suite Creativa 2D"

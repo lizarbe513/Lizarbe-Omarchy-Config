@@ -262,12 +262,40 @@ cmd_status() {
     echo "----------------------------------------------------------"
 }
 
+cmd_tui() {
+    local source="${BASH_SOURCE[0]}"
+    while [[ -h "$source" ]]; do
+        local dir
+        dir="$(cd -P "$(dirname "$source")" >/dev/null 2>&1 && pwd)"
+        source="$(readlink "$source")"
+        [[ $source != /* ]] && source="$dir/$source"
+    done
+    local script_dir
+    script_dir="$(cd -P "$(dirname "$source")" >/dev/null 2>&1 && pwd)"
+
+    local tui_root=""
+    for candidate in "$script_dir" "$HOME/Projects/Lizarbe-Omarchy-Theme" "$REPO_DIR"; do
+        if [[ -d "$candidate/lizarbe_tui" ]]; then
+            tui_root="$candidate"
+            break
+        fi
+    done
+
+    if [[ -n "$tui_root" ]] && command -v python3 &>/dev/null; then
+        export PYTHONPATH="$tui_root:${PYTHONPATH:-}"
+        exec python3 -m lizarbe_tui.cli "$@"
+    else
+        show_help
+    fi
+}
+
 show_help() {
     print_banner
     echo -e "${BOLD}USO:${NC}"
-    echo "  lizarbe <comando> [opciones]"
+    echo "  lizarbe [comando] [opciones]"
     echo ""
     echo -e "${BOLD}COMANDOS DISPONIBLES:${NC}"
+    echo -e "  ${CYAN}(sin argumentos)${NC} / ${CYAN}tui${NC}  Abre la interfaz interactiva TUI de Lizarbe"
     echo -e "  ${CYAN}update${NC}                  Actualiza el tema desde el repositorio oficial de GitHub"
     echo -e "                          Opciones: --force, -y / --non-interactive"
     echo -e "  ${CYAN}uninstall${NC} (o ${CYAN}unistall${NC}) Desinstala componentes del tema o suites de software"
@@ -278,6 +306,7 @@ show_help() {
     echo -e "  ${CYAN}help${NC}                    Muestra esta ayuda"
     echo ""
     echo -e "${BOLD}EJEMPLOS:${NC}"
+    echo "  lizarbe                  # Abre el panel TUI interactivo"
     echo "  lizarbe update"
     echo "  lizarbe update --force"
     echo "  lizarbe apply"
@@ -289,7 +318,7 @@ show_help() {
 # Enrutador principal de comandos
 main() {
     if [[ $# -eq 0 ]]; then
-        show_help
+        cmd_tui
         exit 0
     fi
 
@@ -297,6 +326,12 @@ main() {
     shift
 
     case "$action" in
+        tui|--tui)
+            cmd_tui "$@"
+            ;;
+        --section|-v|--version)
+            cmd_tui "$action" "$@"
+            ;;
         update|upgrade)
             cmd_update "$@"
             ;;

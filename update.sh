@@ -115,16 +115,56 @@ if command -v omarchy &>/dev/null; then
     fi
 fi
 
-# 9. Actualizar la aplicación CLI 'lizarbe' y hooks en el sistema
+# 9. Actualizar la aplicación TUI/CLI 'lizarbe', entrada de escritorio y hooks en el sistema
 if [[ -f "$SCRIPT_DIR/lizarbe" ]]; then
-    info "Actualizando binarios de la aplicación 'lizarbe' en /usr/local/bin..."
-    $SUDO mkdir -p "/usr/local/bin"
+    info "Actualizando binarios y TUI de la aplicación 'lizarbe'..."
+    if [[ "$SCRIPT_DIR" != "/opt/Lizarbe-Omarchy-Theme" && -d "/opt/Lizarbe-Omarchy-Theme" && -d "$SCRIPT_DIR/lizarbe_tui" ]]; then
+        $SUDO rm -rf "/opt/Lizarbe-Omarchy-Theme/lizarbe_tui"
+        $SUDO cp -r "$SCRIPT_DIR/lizarbe_tui" "/opt/Lizarbe-Omarchy-Theme/"
+        [[ -f "$SCRIPT_DIR/lizarbe.desktop" ]] && $SUDO cp -f "$SCRIPT_DIR/lizarbe.desktop" "/opt/Lizarbe-Omarchy-Theme/"
+    fi
+    $SUDO mkdir -p "/usr/local/bin" "$HOME/.local/bin"
     $SUDO cp -p "$SCRIPT_DIR/lizarbe" "/usr/local/bin/lizarbe"
+    cp -f "$SCRIPT_DIR/lizarbe" "$HOME/.local/bin/lizarbe"
+    $SUDO ln -sf "/usr/local/bin/lizarbe" "/usr/local/bin/lizarbe-tui" 2>/dev/null || true
+    ln -sf "$HOME/.local/bin/lizarbe" "$HOME/.local/bin/lizarbe-tui" 2>/dev/null || true
     [[ -f "$SCRIPT_DIR/lizarbe-update" ]] && $SUDO cp -p "$SCRIPT_DIR/lizarbe-update" "/usr/local/bin/lizarbe-update"
     [[ -f "$SCRIPT_DIR/lizarbe-apply-user" ]] && $SUDO cp -p "$SCRIPT_DIR/lizarbe-apply-user" "/usr/local/bin/lizarbe-apply-user"
-    $SUDO chmod 755 "/usr/local/bin/lizarbe"
+    $SUDO chmod 755 "/usr/local/bin/lizarbe" "/usr/local/bin/lizarbe-tui" 2>/dev/null || true
+    chmod 755 "$HOME/.local/bin/lizarbe" "$HOME/.local/bin/lizarbe-tui" 2>/dev/null || true
     [[ -f "/usr/local/bin/lizarbe-update" ]] && $SUDO chmod 755 "/usr/local/bin/lizarbe-update"
     [[ -f "/usr/local/bin/lizarbe-apply-user" ]] && $SUDO chmod 755 "/usr/local/bin/lizarbe-apply-user"
+    if [[ -f "$SCRIPT_DIR/lizarbe.desktop" ]]; then
+        mkdir -p "$HOME/.local/share/applications"
+        cp -f "$SCRIPT_DIR/lizarbe.desktop" "$HOME/.local/share/applications/lizarbe.desktop"
+        $SUDO mkdir -p "/usr/share/applications"
+        $SUDO cp -f "$SCRIPT_DIR/lizarbe.desktop" "/usr/share/applications/lizarbe.desktop"
+        $SUDO chmod 644 "/usr/share/applications/lizarbe.desktop"
+    fi
+
+    # Regla de ventana para Lizarbe Theme & Suite y KDE Connect (inicio directamente flotante y centrado)
+    if [[ -f "$HOME/.config/hypr/looknfeel.lua" ]]; then
+        if ! grep -q "org.omarchy.lizarbe" "$HOME/.config/hypr/looknfeel.lua"; then
+            cat << 'EOF' >> "$HOME/.config/hypr/looknfeel.lua"
+
+-- Regla de ventana para Lizarbe Theme & Suite (inicio directamente flotante y centrado)
+o.window("org.omarchy.lizarbe", { float = true })
+o.window("org.omarchy.lizarbe", { center = true })
+o.window("org.omarchy.lizarbe", { size = { 680, 960 } })
+EOF
+            command -v hyprctl &>/dev/null && hyprctl reload &>/dev/null || true
+        fi
+        if ! grep -q "org.kde.kdeconnect.app" "$HOME/.config/hypr/looknfeel.lua"; then
+            cat << 'EOF' >> "$HOME/.config/hypr/looknfeel.lua"
+
+-- Regla de ventana para KDE Connect (GUI en modo flotante, centrado y tamaño de ventana de opciones)
+o.window("org.kde.kdeconnect.app", { float = true })
+o.window("org.kde.kdeconnect.app", { center = true })
+o.window("org.kde.kdeconnect.app", { size = { 680, 960 } })
+EOF
+            command -v hyprctl &>/dev/null && hyprctl reload &>/dev/null || true
+        fi
+    fi
 
     # Actualizar hook post-update
     mkdir -p "$HOME/.config/omarchy/hooks/post-update.d"

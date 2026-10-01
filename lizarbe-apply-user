@@ -104,6 +104,40 @@ if [[ -f "$HYPR_DIR/input.lua" ]]; then
     sed -i 's/compose:caps//g' "$HYPR_DIR/input.lua"
 fi
 
+# 7b. Regla de ventana para Lizarbe Theme & Suite y KDE Connect (inicio directamente flotante y centrado)
+if [[ -f "$HYPR_DIR/looknfeel.lua" ]]; then
+    if ! grep -q "org.omarchy.lizarbe" "$HYPR_DIR/looknfeel.lua"; then
+        cat << 'EOF' >> "$HYPR_DIR/looknfeel.lua"
+
+-- Regla de ventana para Lizarbe Theme & Suite (inicio directamente flotante y centrado)
+o.window("org.omarchy.lizarbe", { float = true })
+o.window("org.omarchy.lizarbe", { center = true })
+o.window("org.omarchy.lizarbe", { size = { 680, 960 } })
+EOF
+    fi
+    if ! grep -q "org.kde.kdeconnect.app" "$HYPR_DIR/looknfeel.lua"; then
+        cat << 'EOF' >> "$HYPR_DIR/looknfeel.lua"
+
+-- Regla de ventana para KDE Connect (GUI en modo flotante, centrado y tamaño de ventana de opciones)
+o.window("org.kde.kdeconnect.app", { float = true })
+o.window("org.kde.kdeconnect.app", { center = true })
+o.window("org.kde.kdeconnect.app", { size = { 680, 960 } })
+EOF
+    fi
+fi
+
+# 7c. Registrar entrada de escritorio (.desktop) y binario local para el centro de aplicaciones
+if [[ -f "$THEME_SRC/lizarbe.desktop" ]]; then
+    mkdir -p "$USER_HOME/.local/share/applications"
+    cp -f "$THEME_SRC/lizarbe.desktop" "$USER_HOME/.local/share/applications/lizarbe.desktop"
+fi
+if [[ -f "$THEME_SRC/lizarbe" ]]; then
+    mkdir -p "$USER_HOME/.local/bin"
+    cp -f "$THEME_SRC/lizarbe" "$USER_HOME/.local/bin/lizarbe"
+    ln -sf "$USER_HOME/.local/bin/lizarbe" "$USER_HOME/.local/bin/lizarbe-tui" 2>/dev/null || true
+    chmod 755 "$USER_HOME/.local/bin/lizarbe" "$USER_HOME/.local/bin/lizarbe-tui" 2>/dev/null || true
+fi
+
 # 8. Activar el tema Lizarbe a través de Omarchy
 export OMARCHY_THEME_HEADLESS=1
 TARGET_THEME="${2:-}"

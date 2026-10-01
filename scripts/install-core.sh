@@ -99,23 +99,63 @@ if command -v omarchy &>/dev/null; then
     omarchy theme set lizarbe || true
 fi
 
-# 9. Instalar la aplicación CLI 'lizarbe' y hooks del sistema
-info "Instalando aplicación de sistema 'lizarbe' en /usr/local/bin..."
+# 9. Instalar la aplicación TUI/CLI 'lizarbe', entrada de escritorio y hooks del sistema
+info "Instalando aplicación de sistema 'lizarbe' y panel TUI en /usr/local/bin..."
 if [[ "$REPO_DIR" != "/opt/Lizarbe-Omarchy-Theme" ]]; then
     $SUDO mkdir -p "/opt"
     if [[ ! -d "/opt/Lizarbe-Omarchy-Theme" ]]; then
         info "Configurando repositorio del sistema en /opt/Lizarbe-Omarchy-Theme..."
         $SUDO cp -r "$REPO_DIR" "/opt/Lizarbe-Omarchy-Theme"
+    elif [[ -d "$REPO_DIR/lizarbe_tui" ]]; then
+        $SUDO rm -rf "/opt/Lizarbe-Omarchy-Theme/lizarbe_tui"
+        $SUDO cp -r "$REPO_DIR/lizarbe_tui" "/opt/Lizarbe-Omarchy-Theme/"
+        [[ -f "$REPO_DIR/lizarbe.desktop" ]] && $SUDO cp -f "$REPO_DIR/lizarbe.desktop" "/opt/Lizarbe-Omarchy-Theme/"
     fi
 fi
-$SUDO mkdir -p "/usr/local/bin"
+$SUDO mkdir -p "/usr/local/bin" "$HOME/.local/bin"
 if [[ -f "$REPO_DIR/lizarbe" ]]; then
     $SUDO cp -p "$REPO_DIR/lizarbe" "/usr/local/bin/lizarbe"
+    cp -f "$REPO_DIR/lizarbe" "$HOME/.local/bin/lizarbe"
+    $SUDO ln -sf "/usr/local/bin/lizarbe" "/usr/local/bin/lizarbe-tui" 2>/dev/null || true
+    ln -sf "$HOME/.local/bin/lizarbe" "$HOME/.local/bin/lizarbe-tui" 2>/dev/null || true
     $SUDO cp -p "$REPO_DIR/lizarbe-update" "/usr/local/bin/lizarbe-update" 2>/dev/null || true
     [[ -f "$REPO_DIR/lizarbe-apply-user" ]] && $SUDO cp -p "$REPO_DIR/lizarbe-apply-user" "/usr/local/bin/lizarbe-apply-user"
-    $SUDO chmod 755 "/usr/local/bin/lizarbe"
+    $SUDO chmod 755 "/usr/local/bin/lizarbe" "/usr/local/bin/lizarbe-tui" 2>/dev/null || true
+    chmod 755 "$HOME/.local/bin/lizarbe" "$HOME/.local/bin/lizarbe-tui" 2>/dev/null || true
     [[ -f "/usr/local/bin/lizarbe-update" ]] && $SUDO chmod 755 "/usr/local/bin/lizarbe-update"
     [[ -f "/usr/local/bin/lizarbe-apply-user" ]] && $SUDO chmod 755 "/usr/local/bin/lizarbe-apply-user"
+fi
+if [[ -f "$REPO_DIR/lizarbe.desktop" ]]; then
+    info "Registrando aplicación Lizarbe Theme en el centro de aplicaciones..."
+    mkdir -p "$HOME/.local/share/applications"
+    cp -f "$REPO_DIR/lizarbe.desktop" "$HOME/.local/share/applications/lizarbe.desktop"
+    $SUDO mkdir -p "/usr/share/applications"
+    $SUDO cp -f "$REPO_DIR/lizarbe.desktop" "/usr/share/applications/lizarbe.desktop"
+    $SUDO chmod 644 "/usr/share/applications/lizarbe.desktop"
+fi
+
+# Regla de ventana para Lizarbe Theme & Suite y KDE Connect (inicio directamente flotante y centrado)
+if [[ -f "$HOME/.config/hypr/looknfeel.lua" ]]; then
+    if ! grep -q "org.omarchy.lizarbe" "$HOME/.config/hypr/looknfeel.lua"; then
+        cat << 'EOF' >> "$HOME/.config/hypr/looknfeel.lua"
+
+-- Regla de ventana para Lizarbe Theme & Suite (inicio directamente flotante y centrado)
+o.window("org.omarchy.lizarbe", { float = true })
+o.window("org.omarchy.lizarbe", { center = true })
+o.window("org.omarchy.lizarbe", { size = { 680, 960 } })
+EOF
+        command -v hyprctl &>/dev/null && hyprctl reload &>/dev/null || true
+    fi
+    if ! grep -q "org.kde.kdeconnect.app" "$HOME/.config/hypr/looknfeel.lua"; then
+        cat << 'EOF' >> "$HOME/.config/hypr/looknfeel.lua"
+
+-- Regla de ventana para KDE Connect (GUI en modo flotante, centrado y tamaño de ventana de opciones)
+o.window("org.kde.kdeconnect.app", { float = true })
+o.window("org.kde.kdeconnect.app", { center = true })
+o.window("org.kde.kdeconnect.app", { size = { 680, 960 } })
+EOF
+        command -v hyprctl &>/dev/null && hyprctl reload &>/dev/null || true
+    fi
 fi
 
 # Hook prioritario para Omarchy update
@@ -156,7 +196,7 @@ fi
 
 success "Tema Lizarbe instalado en la raíz del sistema (/usr/share/omarchy/themes/) y aplicado con éxito."
 echo ""
-echo -e "${YELLOW}💡 Recomendación (Tema GTK Darky):${NC}"
+echo -e "${YELLOW}[INFO] Recomendación (Tema GTK Darky):${NC}"
 echo -e "   El tema GTK Darky ha quedado preinstalado en el sistema."
 echo -e "   Si deseas activarlo en tus aplicaciones GTK:"
 echo -e "   1. Abre el gestor de apariencia: ejecuta ${CYAN}nwg-look${NC} en la terminal (o desde el menú)."
