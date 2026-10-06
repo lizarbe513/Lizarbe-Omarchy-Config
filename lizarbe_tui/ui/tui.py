@@ -118,7 +118,7 @@ class LizarbeTUI:
         self.context_menu_target_key: str = ""
 
         # Estado de ventana modal:
-        # None | "confirm_section_change" | "confirm_reset" | "confirm_command"
+        # None | "confirm_section_change" | "confirm_reset" | "confirm_command" | "kdeconnect_guide"
         self.modal_state: Optional[str] = None
         self.modal_selected_idx: int = 0
         self.pending_section_idx: Optional[int] = None
@@ -129,6 +129,10 @@ class LizarbeTUI:
         self._pending_cmd_args: List[str] = []
         self._modal_button_click_map: Dict[int, Tuple[int, int]] = {}
         self._modal_button_row_range: Tuple[int, int] = (0, 0)
+        self.guide_scroll_offset: int = 0
+        self._guide_lines: List[Tuple[str, str]] = []
+        self._guide_content_h: int = 20
+        self._guide_box_bounds: Tuple[int, int, int, int] = (0, 0, 0, 0)
 
         # Mapeos de coordenadas para interacción con el ratón y estado hover
         self._sidebar_click_map: Dict[int, int] = {}
@@ -634,6 +638,14 @@ class LizarbeTUI:
             )
         items.extend([
             SectionItem(
+                "action:kc_how_to_use",
+                "Guía de Conexión y Uso",
+                "Instrucciones paso a paso y diagramas para vincular tu teléfono",
+                "action",
+                action_label=" Cómo Usar ",
+                is_installed=False,
+            ),
+            SectionItem(
                 "action:open_kdeconnect_gui",
                 "Abrir Gestor KDE Connect",
                 "Abrir interfaz gráfica completa para vincular dispositivos",
@@ -982,7 +994,9 @@ class LizarbeTUI:
             buf.append(f"\033[{screen_y};{sidebar_w + 2}H{c_line}\033[K")
 
         # 3. Barra Inferior de Estado en fila exacta 'rows'
-        if self.modal_state:
+        if self.modal_state == "kdeconnect_guide":
+            keys_hint = " j/k/Flechas: Desplazar │ Enter/Espacio/Esc/q: Cerrar guía "
+        elif self.modal_state:
             keys_hint = " Tab/Flechas: Seleccionar │ Enter/Espacio: Confirmar │ Esc: Cancelar "
         elif self.context_menu_open:
             keys_hint = " j/k/Flechas: Mover │ Enter/Espacio: Ejecutar │ Esc/q: Cerrar "
@@ -1411,7 +1425,7 @@ class LizarbeTUI:
             is_subdued_item = (
                 (getattr(item, "is_installed", False) and item.item_type == "action")
                 or any(k in item.action_label for k in ("Desinstalar", "No Instalado"))
-                or (sec_id == "kdeconnect" and not self.sys_mgr.is_kdeconnect_installed() and item.key != "action:install_kdeconnect_now")
+                or (sec_id == "kdeconnect" and not self.sys_mgr.is_kdeconnect_installed() and item.key not in ("action:install_kdeconnect_now", "action:kc_how_to_use"))
             )
             if is_sel:
                 l1_raw = f" ▌ {item.name}"[:left_max_w].ljust(left_max_w)
@@ -1529,7 +1543,7 @@ class LizarbeTUI:
             is_subdued = (
                 getattr(item, "is_installed", False)
                 or any(k in raw_lbl for k in ("Desinstalar", "No Instalado"))
-                or (sec_id == "kdeconnect" and not self.sys_mgr.is_kdeconnect_installed() and item.key != "action:install_kdeconnect_now")
+                or (sec_id == "kdeconnect" and not self.sys_mgr.is_kdeconnect_installed() and item.key not in ("action:install_kdeconnect_now", "action:kc_how_to_use"))
             )
 
             if is_subdued:
@@ -2079,7 +2093,253 @@ class LizarbeTUI:
         self.modal_state = "confirm_command"
         self.modal_selected_idx = 1
 
+    def _get_kdeconnect_guide_lines(self) -> List[Tuple[str, str]]:
+        return [
+            ("sec_hdr", "1. INSTALAR LA APP EN TU SMARTPHONE"),
+            ("text", "Descarga e instala la aplicación oficial KDE Connect:"),
+            ("box_top", "┌────────────────────────────────────────────────────────┐"),
+            ("box_item", "│ • Android: Google Play Store o F-Droid (código libre)  │"),
+            ("box_item", "│ • iOS (iPhone / iPad): App Store oficial               │"),
+            ("box_item", "│   Busca exactamente: \"KDE Connect\"                     │"),
+            ("box_bot", "└────────────────────────────────────────────────────────┘"),
+            ("empty", ""),
+            ("sec_hdr", "2. CONECTAR AMBOS EQUIPOS A LA MISMA RED (WI-FI)"),
+            ("text", "Tu PC y tu smartphone deben estar conectados a la misma red:"),
+            ("diagram", "       ┌──────────────┐                 ┌──────────┐        "),
+            ("diagram", "       │ Lizarbe / PC │     (((·)))     │  Móvil   │        "),
+            ("diagram", "       │  ┌────────┐  │      Wi-Fi      │ ┌──────┐ │        "),
+            ("diagram", "       │  │ KDE    │  │ <=============> │ │ KDE  │ │        "),
+            ("diagram", "       │  │ Connect│  │    1714-1764    │ │ App  │ │        "),
+            ("diagram", "       │  └────────┘  │                 │ └──────┘ │        "),
+            ("diagram", "       │   [======]   │                 │   ( )    │        "),
+            ("diagram", "       └──────────────┘                 └──────────┘        "),
+            ("bullet", "• Ambos dispositivos deben conectarse a la misma red local."),
+            ("bullet", "• Si no tienes Wi-Fi común, activa 'Zona Wi-Fi' en tu móvil."),
+            ("bullet", "• Desactiva temporalmente VPNs si bloquean el tráfico local."),
+            ("empty", ""),
+            ("sec_hdr", "3. PUERTOS EN EL CORTAFUEGOS (UFW)"),
+            ("text", "Omarchy protege las conexiones entrantes con cortafuegos:"),
+            ("box_top", "┌────────────────────────────────────────────────────────┐"),
+            ("box_item", "│ Si ves el aviso 'Cortafuegos Bloqueado' en este panel, │"),
+            ("box_item", "│ presiona el botón '[ Abrir Puertos ]' para autorizar   │"),
+            ("box_item", "│ el tráfico en los puertos 1714 a 1764 (TCP y UDP).     │"),
+            ("box_bot", "└────────────────────────────────────────────────────────┘"),
+            ("empty", ""),
+            ("sec_hdr", "4. EMPAREJAR Y VINCULAR DISPOSITIVOS"),
+            ("text", "Pasos para enlazar tu teléfono con la PC:"),
+            ("box_top", "┌────────────────────────────────────────────────────────┐"),
+            ("box_item", "│ 1. Abre la aplicación KDE Connect en tu teléfono.      │"),
+            ("box_item", "│ 2. En 'Dispositivos disponibles', selecciona tu PC.    │"),
+            ("box_item", "│ 3. Pulsa en 'Solicitar vinculación'.                   │"),
+            ("box_item", "│ 4. Acepta la solicitud que aparecerá en tu PC.         │"),
+            ("box_item", "│    O en este panel, pulsa en tu móvil '[ Vincular ]'.  │"),
+            ("box_item", "│ 5. Una vez vinculado, el botón cambiará a [ Vinculado ]│"),
+            ("box_bot", "└────────────────────────────────────────────────────────┘"),
+            ("empty", ""),
+            ("sec_hdr", "5. FUNCIONES Y VENTAJAS EN OMARCHY"),
+            ("box_top", "┌────────────────────────────────────────────────────────┐"),
+            ("box_item", "│ ✓ Portapapeles compartido en tiempo real (copiar/pegar)│"),
+            ("box_item", "│ ✓ Notificaciones de WhatsApp y llamadas en pantalla    │"),
+            ("box_item", "│ ✓ Envío rápido de fotos y archivos sin cables          │"),
+            ("box_item", "│ ✓ Control multimedia (pausar música) y ratón táctil    │"),
+            ("box_item", "│ ✓ Encontrar tu teléfono haciéndolo sonar desde la PC   │"),
+            ("box_bot", "└────────────────────────────────────────────────────────┘"),
+        ]
+
+    def _render_kdeconnect_guide_overlay(self, cols: int, rows: int) -> List[str]:
+        self._modal_button_click_map.clear()
+        self._guide_lines = self._get_kdeconnect_guide_lines()
+
+        gw = min(78, cols - 4)
+        inner_gw = gw - 2
+        avail_text_w = max(10, inner_gw - 2)
+
+        max_gh = max(12, rows - 3)
+        gh = min(36, max_gh)
+        content_h = max(4, gh - 8)
+        gh = content_h + 8
+        self._guide_content_h = content_h
+
+        start_x = max(2, (cols - gw) // 2)
+        start_y = max(2, (rows - gh) // 2)
+        if start_y + gh >= rows:
+            start_y = max(2, rows - gh - 1)
+        self._guide_box_bounds = (start_y, start_y + gh - 1, start_x, start_x + gw - 1)
+
+        total_lines = len(self._guide_lines)
+        max_scroll = max(0, total_lines - content_h)
+        self.guide_scroll_offset = max(0, min(self.guide_scroll_offset, max_scroll))
+
+        overlay: List[str] = []
+
+        # 1. Borde superior
+        top_line = "┌" + ("─" * inner_gw) + "┐"
+        overlay.append(f"\033[{start_y};{start_x}H" + self.theme_engine.style("accent", "background", top_line, bold=True))
+
+        # 2. Barra de título con indicador de desplazamiento
+        title = " GUIA DE CONEXION: OMARCHY & SMARTPHONE "
+        if max_scroll > 0:
+            scr_pct = f" [{self.guide_scroll_offset + 1}-{min(total_lines, self.guide_scroll_offset + content_h)}/{total_lines}] "
+        else:
+            scr_pct = ""
+        avail_title_w = max(1, inner_gw - len(scr_pct))
+        title_padded = title[:avail_title_w].ljust(avail_title_w) + scr_pct
+        overlay.append(
+            f"\033[{start_y + 1};{start_x}H"
+            + self.theme_engine.style("accent", "background", "┃", bold=True)
+            + self.theme_engine.style("bright_foreground", "accent", title_padded[:inner_gw].ljust(inner_gw), bold=True)
+            + self.theme_engine.style("accent", "background", "│", bold=True)
+        )
+
+        # 3. Separador horizontal
+        sep_line = "├" + ("─" * inner_gw) + "┤"
+        overlay.append(f"\033[{start_y + 2};{start_x}H" + self.theme_engine.style("muted", "background", sep_line))
+
+        # 4. Líneas de contenido visible con barra de desplazamiento lateral
+        thumb_row = int((self.guide_scroll_offset / max_scroll) * (content_h - 1)) if max_scroll > 0 else -1
+
+        for r_idx in range(content_h):
+            cur_line_idx = self.guide_scroll_offset + r_idx
+            scr_y = start_y + 3 + r_idx
+
+            if cur_line_idx < total_lines:
+                l_type, l_raw = self._guide_lines[cur_line_idx]
+            else:
+                l_type, l_raw = "empty", ""
+
+            # Borde derecho: indicador de desplazamiento '█' sobrio
+            if max_scroll > 0 and r_idx == thumb_row:
+                r_border = self.theme_engine.style("bright_foreground", "accent", "█", bold=True)
+            else:
+                r_border = self.theme_engine.style("accent" if max_scroll > 0 else "muted", "background", "│")
+
+            l_border = self.theme_engine.style("accent", "background", "┃", bold=True)
+
+            # Formateo y estilización por tipo
+            if l_type == "sec_hdr":
+                raw_txt = (" ━━ " + l_raw + " ").ljust(avail_text_w, "─")[:avail_text_w]
+                styled_content = self.theme_engine.style("bright_foreground", "background", raw_txt, bold=True)
+            elif l_type in ("box_top", "box_bot"):
+                if avail_text_w < len(l_raw):
+                    raw_txt = l_raw[:avail_text_w].ljust(avail_text_w)
+                else:
+                    pad = (avail_text_w - len(l_raw)) // 2
+                    rem_w = avail_text_w - pad - len(l_raw)
+                    raw_txt = (" " * pad) + l_raw + (" " * rem_w)
+                styled_content = self.theme_engine.style("accent", "background", raw_txt, bold=True)
+            elif l_type == "box_item":
+                if avail_text_w < len(l_raw):
+                    raw_txt = l_raw[:avail_text_w].ljust(avail_text_w)
+                    styled_content = self.theme_engine.style("bright_foreground", "background", raw_txt)
+                else:
+                    pad = (avail_text_w - len(l_raw)) // 2
+                    left_pad = " " * pad
+                    rem_w = avail_text_w - pad - len(l_raw)
+                    right_pad = " " * rem_w
+                    if l_raw.startswith("│") and l_raw.endswith("│"):
+                        box_core = l_raw[1:-1]
+                        styled_content = (
+                            self.theme_engine.style("foreground", "background", left_pad)
+                            + self.theme_engine.style("accent", "background", "│", bold=True)
+                            + self.theme_engine.style("bright_foreground", "background", box_core)
+                            + self.theme_engine.style("accent", "background", "│", bold=True)
+                            + self.theme_engine.style("foreground", "background", right_pad)
+                        )
+                    else:
+                        raw_txt = (left_pad + l_raw + right_pad)[:avail_text_w]
+                        styled_content = self.theme_engine.style("bright_foreground", "background", raw_txt)
+            elif l_type == "diagram":
+                pad = max(0, (avail_text_w - len(l_raw.rstrip())) // 2)
+                raw_txt = ((" " * pad) + l_raw.rstrip())[:avail_text_w].ljust(avail_text_w)
+                styled_content = self.theme_engine.style("bright_foreground", "background", raw_txt, bold=True)
+            elif l_type == "bullet":
+                sym = l_raw[0] if l_raw and l_raw[0] in ("•", "✓") else "•"
+                rest = l_raw[1:].strip() if l_raw and l_raw[0] in ("•", "✓") else l_raw
+                sym_str = f"  {sym} "
+                avail_rest = max(0, avail_text_w - len(sym_str))
+                rest_padded = rest[:avail_rest].ljust(avail_rest)
+                styled_content = (
+                    self.theme_engine.style("accent", "background", sym_str, bold=True)
+                    + self.theme_engine.style("foreground", "background", rest_padded)
+                )
+            elif l_type == "text":
+                raw_txt = ("   " + l_raw)[:avail_text_w].ljust(avail_text_w)
+                styled_content = self.theme_engine.style("foreground", "background", raw_txt)
+            else:
+                styled_content = self.theme_engine.style("foreground", "background", " " * avail_text_w)
+
+            overlay.append(f"\033[{scr_y};{start_x}H{l_border} {styled_content} {r_border}")
+
+        # 5. Espacio en blanco antes de botón
+        btn_pre_y = start_y + 3 + content_h
+        empty_line = " " * inner_gw
+        overlay.append(
+            f"\033[{btn_pre_y};{start_x}H"
+            + self.theme_engine.style("accent", "background", "┃", bold=True)
+            + self.theme_engine.style("foreground", "background", empty_line)
+            + self.theme_engine.style("accent", "background", "│", bold=True)
+        )
+
+        # 6. Botón 3D sobrio: [ Entendido (Enter / Esc) ]
+        btn_y_top = start_y + 4 + content_h
+        self._modal_button_row_range = (btn_y_top, btn_y_top + 2)
+
+        b_lbl = " Entendido (Enter / Esc) "
+        bw = len(b_lbl) + 2
+        pad_left = max(1, (inner_gw - bw) // 2)
+        pad_right = max(0, inner_gw - bw - pad_left)
+
+        btn_start_x = start_x + 1 + pad_left
+        self._modal_button_click_map[0] = (btn_start_x, btn_start_x + bw - 1)
+
+        is_b_hov = (self.hover_modal_btn_idx == 0)
+        b_col = "accent" if is_b_hov else "bright_foreground"
+        sh_col = "accent"
+        btn_bg = "soft_hover" if is_b_hov else "soft_selection"
+
+        r0_s = self.theme_engine.style(b_col, "background", "┌" + ("─" * len(b_lbl)) + "┐", bold=True)
+        r1_s = (
+            self.theme_engine.style(sh_col, "background", "┃", bold=True)
+            + self.theme_engine.style("bright_foreground", btn_bg, b_lbl, bold=True)
+            + self.theme_engine.style(b_col, "background", "│", bold=True)
+        )
+        r2_s = self.theme_engine.style(sh_col, "background", "┗" + ("━" * len(b_lbl)) + "┙", bold=True)
+
+        overlay.append(
+            f"\033[{btn_y_top};{start_x}H"
+            + self.theme_engine.style("accent", "background", "┃", bold=True)
+            + self.theme_engine.style("foreground", "background", " " * pad_left)
+            + r0_s
+            + self.theme_engine.style("foreground", "background", " " * pad_right)
+            + self.theme_engine.style("accent", "background", "│", bold=True)
+        )
+        overlay.append(
+            f"\033[{btn_y_top + 1};{start_x}H"
+            + self.theme_engine.style("accent", "background", "┃", bold=True)
+            + self.theme_engine.style("foreground", "background", " " * pad_left)
+            + r1_s
+            + self.theme_engine.style("foreground", "background", " " * pad_right)
+            + self.theme_engine.style("accent", "background", "│", bold=True)
+        )
+        overlay.append(
+            f"\033[{btn_y_top + 2};{start_x}H"
+            + self.theme_engine.style("accent", "background", "┃", bold=True)
+            + self.theme_engine.style("foreground", "background", " " * pad_left)
+            + r2_s
+            + self.theme_engine.style("foreground", "background", " " * pad_right)
+            + self.theme_engine.style("accent", "background", "│", bold=True)
+        )
+
+        # 7. Borde inferior
+        bot_line = "┗" + ("━" * inner_gw) + "┙"
+        overlay.append(f"\033[{start_y + gh - 1};{start_x}H" + self.theme_engine.style("accent", "background", bot_line, bold=True))
+
+        return overlay
+
     def _render_modal_overlay(self, cols: int, rows: int) -> List[str]:
+        if self.modal_state == "kdeconnect_guide":
+            return self._render_kdeconnect_guide_overlay(cols, rows)
+
         self._modal_button_click_map.clear()
 
         if self.modal_state == "confirm_section_change":
@@ -2542,7 +2802,7 @@ class LizarbeTUI:
 
         # Acciones para KDE Connect cuando no está instalado
         if not self.sys_mgr.is_kdeconnect_installed():
-            if action_key != "action:install_kdeconnect_now" and (
+            if action_key not in ("action:install_kdeconnect_now", "action:kc_how_to_use") and (
                 action_key.startswith("kc_")
                 or action_key.startswith("action:kc_")
                 or action_key.startswith("info:kc_")
@@ -2553,6 +2813,12 @@ class LizarbeTUI:
             ):
                 self.status_message = "KDE Connect aún no está instalado en el equipo. Pulsa ' Instalar' abajo para comenzar."
                 return
+
+        if action_key == "action:kc_how_to_use":
+            self.guide_scroll_offset = 0
+            self.modal_state = "kdeconnect_guide"
+            self.modal_selected_idx = 0
+            return
 
         if action_key.startswith("kc_device:"):
             dev_id = action_key.split(":", 1)[1]
@@ -2805,7 +3071,7 @@ class LizarbeTUI:
         item = items[self.selected_item_idx]
 
         if sec_id == "kdeconnect" and not self.sys_mgr.is_kdeconnect_installed():
-            if item.key != "action:install_kdeconnect_now":
+            if item.key not in ("action:install_kdeconnect_now", "action:kc_how_to_use"):
                 self.status_message = "KDE Connect aún no está instalado en el equipo. Pulsa ' Instalar' abajo para comenzar."
                 return
 
@@ -2898,7 +3164,33 @@ class LizarbeTUI:
                 return
             return
 
-        # 2. Modal de confirmación
+        # 2. Modal de guía de KDE Connect
+        if self.modal_state == "kdeconnect_guide":
+            max_scroll = max(0, len(self._guide_lines) - self._guide_content_h)
+            if (ch == b"\x1b" and len(ch) == 1) or ch in (b"q", b"Q", b"\r", b"\n", b" "):
+                self.modal_state = None
+                return
+            if ch in (b"\x1b[A", b"k", b"K"):
+                self.guide_scroll_offset = max(0, self.guide_scroll_offset - 1)
+                return
+            if ch in (b"\x1b[B", b"j", b"J"):
+                self.guide_scroll_offset = min(max_scroll, self.guide_scroll_offset + 1)
+                return
+            if ch in (b"\x1b[5~", b"\x02"):  # PageUp, Ctrl+B
+                self.guide_scroll_offset = max(0, self.guide_scroll_offset - max(1, self._guide_content_h - 2))
+                return
+            if ch in (b"\x1b[6~", b"\x06"):  # PageDown, Ctrl+F
+                self.guide_scroll_offset = min(max_scroll, self.guide_scroll_offset + max(1, self._guide_content_h - 2))
+                return
+            if ch in (b"\x1b[H", b"\x1b[1~"):  # Home
+                self.guide_scroll_offset = 0
+                return
+            if ch in (b"\x1b[F", b"\x1b[4~"):  # End
+                self.guide_scroll_offset = max_scroll
+                return
+            return
+
+        # 3. Modal de confirmación
         if self.modal_state:
             max_idx = 2 if self.modal_state == "confirm_section_change" else 1
             if ch == b"\x1b" and len(ch) == 1:
@@ -3171,6 +3463,40 @@ class LizarbeTUI:
             return
 
         # 2. Modal activo
+        if self.modal_state == "kdeconnect_guide":
+            max_scroll = max(0, len(self._guide_lines) - self._guide_content_h)
+            if btn == 64:  # Rueda arriba
+                self.guide_scroll_offset = max(0, self.guide_scroll_offset - 2)
+                return
+            if btn == 65:  # Rueda abajo
+                self.guide_scroll_offset = min(max_scroll, self.guide_scroll_offset + 2)
+                return
+            if act == b"M" and btn == 35:  # Hover
+                m_ymin, m_ymax = self._modal_button_row_range
+                self.hover_modal_btn_idx = None
+                if m_ymin <= y <= m_ymax:
+                    for b_idx, (bx_min, bx_max) in self._modal_button_click_map.items():
+                        if bx_min <= x <= bx_max:
+                            self.hover_modal_btn_idx = b_idx
+                            return
+                return
+            if act == b"M" and btn == 0:  # Clic izquierdo
+                m_ymin, m_ymax = self._modal_button_row_range
+                if m_ymin <= y <= m_ymax:
+                    for b_idx, (bx_min, bx_max) in self._modal_button_click_map.items():
+                        if bx_min <= x <= bx_max:
+                            self.modal_state = None
+                            return
+                b_ymin, b_ymax, b_xmin, b_xmax = getattr(self, "_guide_box_bounds", (0, 0, 0, 0))
+                if x < b_xmin or x > b_xmax or y < b_ymin or y > b_ymax:
+                    self.modal_state = None
+                    return
+                return
+            if act == b"M" and btn == 2:  # Clic derecho -> cerrar
+                self.modal_state = None
+                return
+            return
+
         if self.modal_state:
             if act == b"M" and btn == 35:
                 m_ymin, m_ymax = self._modal_button_row_range
@@ -3302,7 +3628,7 @@ class LizarbeTUI:
                         sec_id = self.SECTIONS[self.current_section_idx][1]
 
                         if sec_id == "kdeconnect" and not self.sys_mgr.is_kdeconnect_installed():
-                            if item.key == "action:install_kdeconnect_now":
+                            if item.key in ("action:install_kdeconnect_now", "action:kc_how_to_use"):
                                 self._activate_current_item()
                             else:
                                 self.status_message = "KDE Connect aún no está instalado en el equipo. Pulsa ' Instalar' abajo para comenzar."
