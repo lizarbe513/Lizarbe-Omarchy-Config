@@ -86,7 +86,6 @@ class SystemManager:
         self.sync_state_cache: str = "Verificacion bajo demanda"
         self._kdeconnect_devices_cache: List[Dict[str, Any]] = []
         self._kdeconnect_last_check: float = 0.0
-        self.ensure_hyprland_rule()
         self.ensure_desktop_entry()
         self.refresh_installed_packages()
 
@@ -215,22 +214,9 @@ class SystemManager:
         br_dir = Path.home() / ".config" / "omarchy" / "branding"
         return (br_dir / "about.txt").exists() or (br_dir / "screensaver.txt").exists()
 
-    def is_caps_fixed(self) -> bool:
-        input_lua = Path.home() / ".config" / "hypr" / "input.lua"
-        if input_lua.exists():
-            try:
-                txt = input_lua.read_text(encoding="utf-8", errors="ignore")
-                return "compose:caps" not in txt
-            except Exception:
-                pass
-        return True
-
     def is_omarchy_hook_installed(self) -> bool:
         hook_f = Path.home() / ".config" / "omarchy" / "hooks" / "post-update.d" / "00-lizarbe-update.hook"
         return hook_f.exists()
-
-    def is_pacman_hook_installed(self) -> bool:
-        return Path("/etc/pacman.d/hooks/00-lizarbe-update.hook").exists()
 
     def is_desktop_entry_installed(self) -> bool:
         return (
@@ -289,7 +275,6 @@ class SystemManager:
             "fastfetch": self.is_fastfetch_configured(),
             "starship": self.is_starship_configured(),
             "branding": self.is_branding_configured(),
-            "fix_caps": self.is_caps_fixed(),
             "zen_default": self.is_package_installed("zen-browser-bin"),
             "omarchy_hook": self.is_omarchy_hook_installed(),
             "desktop_entry": self.is_desktop_entry_installed(),
@@ -432,24 +417,6 @@ class SystemManager:
         except Exception:
             return False
 
-    def apply_fix_caps(self, fix_caps: bool = True) -> bool:
-        """Libera o restaura Bloq Mayús en ~/.config/hypr/input.lua."""
-        input_lua = Path.home() / ".config" / "hypr" / "input.lua"
-        try:
-            if not input_lua.exists():
-                return True
-            content = input_lua.read_text(encoding="utf-8", errors="ignore")
-            if fix_caps:
-                content = content.replace('kb_options = "compose:caps"', 'kb_options = ""')
-                content = content.replace("compose:caps", "")
-            else:
-                if 'kb_options = ""' in content:
-                    content = content.replace('kb_options = ""', 'kb_options = "compose:caps"')
-            input_lua.write_text(content, encoding="utf-8")
-            return True
-        except Exception:
-            return False
-
     def apply_omarchy_hook(self, enable: bool = True) -> bool:
         """Instala o elimina el hook 00-lizarbe-update.hook en ~/.config/omarchy/hooks/post-update.d."""
         hook_dir = Path.home() / ".config" / "omarchy" / "hooks" / "post-update.d"
@@ -560,40 +527,6 @@ Keywords=lizarbe;omarchy;theme;tema;suites;config;tui;hyprland;
         except Exception:
             pass
         return False
-
-    def ensure_hyprland_rule(self) -> bool:
-        """Asegura que Hyprland inicie org.omarchy.lizarbe y la GUI de KDE Connect directamente en modo flotante y centrado (tamaño 680x960)."""
-        looknfeel = Path.home() / ".config" / "hypr" / "looknfeel.lua"
-        if not looknfeel.exists():
-            return False
-        try:
-            content = looknfeel.read_text(encoding="utf-8")
-            modified = False
-            if "org.omarchy.lizarbe" not in content:
-                rule_lizarbe = (
-                    "\n-- Regla de ventana para Lizarbe Theme & Suite (inicio directamente flotante y centrado)\n"
-                    'o.window("org.omarchy.lizarbe", { float = true })\n'
-                    'o.window("org.omarchy.lizarbe", { center = true })\n'
-                    'o.window("org.omarchy.lizarbe", { size = { 680, 960 } })\n'
-                )
-                content += rule_lizarbe
-                modified = True
-            if "org.kde.kdeconnect.app" not in content:
-                rule_kdeconnect = (
-                    "\n-- Regla de ventana para KDE Connect (GUI flotante, centrada y mismo tamaño de opciones)\n"
-                    'o.window("org.kde.kdeconnect.app", { float = true })\n'
-                    'o.window("org.kde.kdeconnect.app", { center = true })\n'
-                    'o.window("org.kde.kdeconnect.app", { size = { 680, 960 } })\n'
-                )
-                content += rule_kdeconnect
-                modified = True
-            if modified:
-                looknfeel.write_text(content, encoding="utf-8")
-                if shutil.which("hyprctl"):
-                    subprocess.run(["hyprctl", "reload"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            return True
-        except Exception:
-            return False
 
     def is_kdeconnect_installed(self) -> bool:
         """Verifica si el paquete kdeconnect o el binario kdeconnect-cli está instalado."""
@@ -729,6 +662,12 @@ Keywords=lizarbe;omarchy;theme;tema;suites;config;tui;hyprland;
             return True
         except Exception:
             return False
+
+    def ensure_hyprland_rule(self) -> None:
+        """Reglas de ventana flotante en su propio archivo (lizarbe-hypr-rules)."""
+        script = shutil.which("lizarbe-hypr-rules") or str(self.repo_dir / "lizarbe-hypr-rules")
+        if Path(script).exists():
+            subprocess.run(["bash", script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15)
 
     def open_kdeconnect_gui(self) -> bool:
         self.ensure_hyprland_rule()

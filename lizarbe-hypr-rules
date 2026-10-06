@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Reglas de ventana flotante del Centro Lizarbe y de KDE Connect.
+# Van en ~/.config/hypr/lizarbe-centro.lua (cargado desde hyprland.lua); no se
+# toca looknfeel.lua. Limpia las reglas que versiones anteriores añadían ahí.
+set -euo pipefail
+
+HYPR_DIR="${1:-${USER_HOME:-$HOME}/.config/hypr}"
+RULES="$HYPR_DIR/lizarbe-centro.lua"
+MAIN="$HYPR_DIR/hyprland.lua"
+LOOK="$HYPR_DIR/looknfeel.lua"
+changed=0
+
+mkdir -p "$HYPR_DIR"
+new_rules='-- Gestionado por el Centro Lizarbe: ventanas flotantes y centradas.
+if o and o.window then
+  o.window("org.omarchy.lizarbe", { float = true, center = true, size = { 680, 960 } })
+  o.window("org.kde.kdeconnect.app", { float = true, center = true, size = { 680, 960 } })
+end'
+if [[ ! -f $RULES ]] || [[ "$(cat "$RULES")" != "$new_rules" ]]; then
+  printf '%s\n' "$new_rules" >"$RULES"
+  changed=1
+fi
+
+if [[ -f $MAIN ]] && ! grep -q 'require("hypr.lizarbe-centro")' "$MAIN"; then
+  printf '\n-- Centro Lizarbe: ventanas flotantes\nrequire("hypr.lizarbe-centro")\n' >>"$MAIN"
+  changed=1
+fi
+
+if [[ -f $LOOK ]] && grep -q '^-- Regla de ventana para \(Lizarbe Theme\|KDE Connect\)' "$LOOK"; then
+  cp "$LOOK" "$LOOK.bak.$(date +%s)"
+  sed -i '/^-- Regla de ventana para \(Lizarbe Theme\|KDE Connect\)/,+3d' "$LOOK"
+  changed=1
+fi
+
+if [[ $changed -eq 1 ]] && command -v hyprctl &>/dev/null && [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
+  hyprctl reload &>/dev/null || true
+fi
+exit 0

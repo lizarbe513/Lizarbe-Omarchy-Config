@@ -51,14 +51,14 @@ class SectionItem:
 
 class LizarbeTUI:
     """
-    Panel TUI de Gestión del Tema, Suites y Monitor de Actualizaciones Lizarbe OS.
+    Centro Lizarbe: identidad, software y actualizaciones de Lizarbe OS.
     Comparte la arquitectura, proporciones y controles de Meca HyprConfig.
     """
 
     SECTIONS = [
         ("SISTEMA LIZARBE", "status", "󰚰", "Actualizaciones", "Monitor del equipo y parches oficiales"),
-        ("SISTEMA LIZARBE", "theme", "󰏘", "Tema y Estilo", "Variantes, fondos, iconos y GTK"),
-        ("SISTEMA LIZARBE", "dotfiles", "", "Personalizacion", "Fastfetch, Starship y Bloq Mayus"),
+        ("SISTEMA LIZARBE", "theme", "󰏘", "Iconos y GTK", "Iconos Lizarbe-Red y tema Darky"),
+        ("SISTEMA LIZARBE", "dotfiles", "", "Personalizacion", "Fastfetch, Starship y branding"),
         ("SOFTWARE Y APPS", "apps_util", "󰣆", "Utilidades", "Zen Browser, monitores y herramientas"),
         ("SOFTWARE Y APPS", "kdeconnect", "󰄡", "KDE Connect", "Vincular y sincronizar con tu smartphone"),
         ("SOFTWARE Y APPS", "apps_creative", "", "Apps Creativas", "Ilustracion 2D, 3D, CAD y Video"),
@@ -170,49 +170,10 @@ class LizarbeTUI:
 
         return [
             SectionItem(
-                "header:lizarbe_variants",
-                "VARIANTES OFICIALES LIZARBE",
-                "Clic: Seleccionar variante │ Clic der: Opciones",
-                "header",
-            ),
-            SectionItem(
-                "theme_card:lizarbe",
-                "lizarbe",
-                "Modo Oscuro OLED / Charcoal (#E31B23)",
-                "theme_card",
-            ),
-            SectionItem(
-                "theme_card:lizarbe-light",
-                "lizarbe-light",
-                "Modo Claro CAD / Whiteprint (#E31B23)",
-                "theme_card",
-            ),
-            SectionItem(
                 "header:theme_controls",
-                "APARIENCIA Y FONDOS",
-                "Seleccion de tema, fondo de pantalla e iconos",
+                "ICONOS Y GTK",
+                "Para cambiar de tema o fondo usa Menu > Style en Omarchy",
                 "header",
-            ),
-            SectionItem(
-                "active_theme",
-                "Tema del sistema",
-                "Tema activo en Omarchy",
-                "select",
-                options=self.available_themes,
-            ),
-            SectionItem(
-                "wallpaper",
-                "Fondo de pantalla",
-                "Fondos incluidos en el tema",
-                "select",
-                options=wps,
-            ),
-            SectionItem(
-                "action:next_wallpaper",
-                "Siguiente fondo",
-                "Rotar fondo actual en vivo",
-                "action",
-                action_label=" Cambiar ",
             ),
             SectionItem(
                 "icons_lizarbe",
@@ -269,12 +230,6 @@ class LizarbeTUI:
                 "toggle",
             ),
             SectionItem(
-                "fix_caps",
-                "Liberar Bloq Mayus",
-                "Desactivar compose:caps en input.lua",
-                "toggle",
-            ),
-            SectionItem(
                 "omarchy_hook",
                 "Hook Auto-Update",
                 "Actualizar Lizarbe con omarchy update",
@@ -292,13 +247,6 @@ class LizarbeTUI:
                 "Establecer Zen como navegador del sistema",
                 "action",
                 action_label=" Configurar ",
-            ),
-            SectionItem(
-                "action:fix_caps_now",
-                "Corregir Bloq Mayus ahora",
-                "Guardar correccion en ~/.config/hypr/input.lua",
-                "action",
-                action_label=" Corregir ",
             ),
             SectionItem(
                 "action:restart_shell",
@@ -336,7 +284,6 @@ class LizarbeTUI:
         root_theme = "Instalado" if Path("/usr/share/omarchy/themes/lizarbe").exists() else "No instalado"
         root_icons = "Instalados" if Path("/usr/share/icons/Lizarbe-Red").exists() else "No encontrados"
         root_darky = "Instalado" if Path("/usr/share/themes/Darky").exists() else "No encontrado"
-        pac_hook = "Activo" if self.sys_mgr.is_pacman_hook_installed() else "No instalado"
 
         return [
             SectionItem(
@@ -419,13 +366,6 @@ class LizarbeTUI:
                 "Tema GTK3/GTK4 en la raíz del sistema",
                 "info_badge",
                 action_label=f" {root_darky} ",
-            ),
-            SectionItem(
-                "info:pacman_hook",
-                "Hook Automático de Pacman",
-                "/etc/pacman.d/hooks/00-lizarbe-update.hook",
-                "info_badge",
-                action_label=f" {pac_hook} ",
             ),
         ]
 
@@ -916,7 +856,7 @@ class LizarbeTUI:
             print("Error: lizarbe TUI debe ejecutarse en una terminal TTY.")
             return
 
-        sys.stdout.write("\033]0;LIZARBE Theme & Suite\007\033]2;LIZARBE Theme & Suite\007")
+        sys.stdout.write("\033]0;CENTRO LIZARBE\007\033]2;LIZARBE Theme & Suite\007")
         sys.stdout.flush()
 
         if self._was_tiled is None:
@@ -969,7 +909,7 @@ class LizarbeTUI:
 
         # 1. Barra de Título Superior en fila exacta 1 (\033[1;1H)
         local_ver = self.sys_mgr.get_local_git_hash()
-        title_left = " LIZARBE Theme & Suite "
+        title_left = " CENTRO LIZARBE "
         unsaved_badge = " *PENDIENTE* | " if self.has_unsaved_changes() else ""
         title_right = f"{unsaved_badge}v:{local_ver} | Tema: {self.theme_engine.current_theme} | q/Esc: Salir "
         if len(title_left) + len(title_right) > cols:
@@ -2618,13 +2558,6 @@ class LizarbeTUI:
                 self.status_message = "No se encontró 'omarchy-default-browser'."
             return
 
-        if action_key == "action:fix_caps_now":
-            self.sys_mgr.apply_fix_caps(fix_caps=True)
-            self.settings["fix_caps"] = True
-            self.saved_settings["fix_caps"] = True
-            self.status_message = "✓ Tecla Bloq Mayus corregida en ~/.config/hypr/input.lua."
-            return
-
         if action_key == "action:restart_shell":
             try:
                 subprocess.Popen(
@@ -2940,8 +2873,6 @@ class LizarbeTUI:
             self.sys_mgr.apply_starship_user(bool(self.settings.get("starship")))
         if self.settings.get("branding") != self.saved_settings.get("branding"):
             self.sys_mgr.apply_branding_user(bool(self.settings.get("branding")))
-        if self.settings.get("fix_caps") != self.saved_settings.get("fix_caps"):
-            self.sys_mgr.apply_fix_caps(bool(self.settings.get("fix_caps")))
         if self.settings.get("omarchy_hook") != self.saved_settings.get("omarchy_hook"):
             self.sys_mgr.apply_omarchy_hook(bool(self.settings.get("omarchy_hook")))
 

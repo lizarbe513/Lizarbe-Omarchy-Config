@@ -142,29 +142,9 @@ if [[ -f "$SCRIPT_DIR/lizarbe" ]]; then
         $SUDO chmod 644 "/usr/share/applications/lizarbe.desktop"
     fi
 
-    # Regla de ventana para Lizarbe Theme & Suite y KDE Connect (inicio directamente flotante y centrado)
-    if [[ -f "$HOME/.config/hypr/looknfeel.lua" ]]; then
-        if ! grep -q "org.omarchy.lizarbe" "$HOME/.config/hypr/looknfeel.lua"; then
-            cat << 'EOF' >> "$HOME/.config/hypr/looknfeel.lua"
-
--- Regla de ventana para Lizarbe Theme & Suite (inicio directamente flotante y centrado)
-o.window("org.omarchy.lizarbe", { float = true })
-o.window("org.omarchy.lizarbe", { center = true })
-o.window("org.omarchy.lizarbe", { size = { 680, 960 } })
-EOF
-            command -v hyprctl &>/dev/null && hyprctl reload &>/dev/null || true
-        fi
-        if ! grep -q "org.kde.kdeconnect.app" "$HOME/.config/hypr/looknfeel.lua"; then
-            cat << 'EOF' >> "$HOME/.config/hypr/looknfeel.lua"
-
--- Regla de ventana para KDE Connect (GUI en modo flotante, centrado y tamaño de ventana de opciones)
-o.window("org.kde.kdeconnect.app", { float = true })
-o.window("org.kde.kdeconnect.app", { center = true })
-o.window("org.kde.kdeconnect.app", { size = { 680, 960 } })
-EOF
-            command -v hyprctl &>/dev/null && hyprctl reload &>/dev/null || true
-        fi
-    fi
+    # Reglas de ventana flotante en su propio archivo (no en looknfeel.lua)
+    [[ -f "$SCRIPT_DIR/lizarbe-hypr-rules" ]] && bash "$SCRIPT_DIR/lizarbe-hypr-rules" || true
+    [[ -f "$SCRIPT_DIR/lizarbe-hypr-rules" ]] && $SUDO cp -p "$SCRIPT_DIR/lizarbe-hypr-rules" "/usr/local/bin/lizarbe-hypr-rules" || true
 
     # Actualizar hook post-update
     mkdir -p "$HOME/.config/omarchy/hooks/post-update.d"
@@ -186,21 +166,8 @@ EOF
         $SUDO cp -p "$HOME/.config/omarchy/hooks/post-update.d/00-lizarbe-update.hook" "/etc/skel/.config/omarchy/hooks/post-update.d/00-lizarbe-update.hook" 2>/dev/null || true
     fi
 
-    if [[ -d "/etc/pacman.d" ]]; then
-        $SUDO mkdir -p "/etc/pacman.d/hooks"
-        cat << 'EOF' | $SUDO tee "/etc/pacman.d/hooks/00-lizarbe-update.hook" >/dev/null
-[Trigger]
-Operation = Upgrade
-Type = Package
-Target = omarchy-*
-Target = hyprland
-
-[Action]
-Description = Sincronizando Tema Lizarbe tras actualización del sistema...
-When = PostTransaction
-Exec = /usr/bin/bash -c "if [[ -x /usr/local/bin/lizarbe ]] && [[ ! -f /tmp/omarchy-update.log ]]; then /usr/local/bin/lizarbe update --non-interactive || true; fi"
-EOF
-    fi
+    # Se retira el hook de pacman de versiones anteriores (corría como root).
+    $SUDO rm -f "/etc/pacman.d/hooks/00-lizarbe-update.hook" 2>/dev/null || true
 fi
 
 echo ""

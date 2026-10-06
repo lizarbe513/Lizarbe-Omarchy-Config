@@ -21,7 +21,7 @@ class StartupLoader:
     Se ejecuta en un hilo secundario durante la inicialización de LizarbeTUI.
     """
 
-    def __init__(self, title: str = "LIZARBE Theme & Suite"):
+    def __init__(self, title: str = "CENTRO LIZARBE"):
         self.title = title
         self.was_tiled: Optional[bool] = None
         self._stop_event = threading.Event()
