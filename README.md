@@ -19,13 +19,15 @@ Sistema completo de personalización, herramientas y catálogo de software para 
 
 ---
 
-## Instalación Rápida
+## Instalación
 
-Para instalar el entorno completo en un sistema Omarchy recién instalado, ejecuta en tu terminal:
+Centro Lizarbe se instala como paquete desde el repositorio de Lizarbe (viene preinstalado en la ISO Lizarbe):
 
 ```bash
-git clone https://github.com/lizarbe513/Lizarbe-Omarchy-Theme.git && cd Lizarbe-Omarchy-Theme && ./install.sh
+sudo pacman -S lizarbe-centro     # o el metapaquete completo: sudo pacman -S lizarbe
 ```
+
+Para desarrollo, desde el código fuente: `./install.sh` (las suites de software) y `./lizarbe` (la línea de comandos).
 
 El instalador te permitirá seleccionar interactivamente qué suites deseas habilitar en el equipo.
 
@@ -133,7 +135,7 @@ Para automatizar la instalación en nuevas máquinas sin interacción manual:
 |---|---|
 | `./install.sh --all` | Instala todas las suites (incluyendo herramientas 3D) |
 | `./install.sh --no-3d` | **Recomendado para portátiles sin gráfica dedicada** (instala todo excepto 3D) |
-| `./install.sh --core-only` | Solo tema, iconos, branding, TUI y dotfiles base |
+| `./install.sh --core-only` | Solo tema, iconos, branding y dotfiles base (paquete `lizarbe-tema`) |
 | `./install.sh --2d` | Solo la suite de Creatividad 2D & Pixel Art |
 | `./install.sh --3d` | Solo la suite de Modelado 3D & CAD |
 | `./install.sh --dev` | Solo herramientas de desarrollo y contenedores |
@@ -172,7 +174,7 @@ lizarbe help
 ```
 
 ### Actualización Automática del Sistema
-El proyecto instala un hook prioritario (`00-lizarbe-update.hook`) en los directorios de actualización de Omarchy y Pacman. Cada vez que se actualiza el sistema, Lizarbe comprueba automáticamente el repositorio oficial para mantenerse al día sin intervenciones manuales.
+Lizarbe se entrega como paquetes pacman (`lizarbe-*`) desde el repositorio de Lizarbe, así que se actualiza junto con el sistema con `omarchy update`. Después de cada actualización, `lizarbe-doctor` revisa y repara la integración con Omarchy (menú, reglas de ventana, hooks).
 
 ---
 

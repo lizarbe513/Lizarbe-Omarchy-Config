@@ -29,11 +29,9 @@ if [[ ! -d "$USER_HOME" ]]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [[ -d "$SCRIPT_DIR/icons/Lizarbe-Red" ]]; then
-    THEME_SRC="$SCRIPT_DIR"
-else
-    THEME_SRC="/opt/Lizarbe-Omarchy-Theme"
-fi
+# En desarrollo (desde el código fuente) usa las carpetas de al lado; instalado
+# desde el paquete usa /usr/share (lizarbe-tema).
+THEME_SRC="$SCRIPT_DIR"
 
 # 1. Enlaces de iconos Lizarbe-Red
 mkdir -p "$USER_HOME/.local/share/icons" "$USER_HOME/.icons"

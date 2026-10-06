@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# lizarbe: Aplicación del Sistema y CLI oficial de Lizarbe Omarchy Theme
+# lizarbe: línea de comandos de Lizarbe (paquete lizarbe-centro)
 # ==============================================================================
 set -e
-
-REPO_DIR="/opt/Lizarbe-Omarchy-Theme"
-OFFICIAL_REPO_URL="https://github.com/lizarbe513/Lizarbe-Omarchy-Theme.git"
 
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
@@ -14,279 +11,102 @@ RED='\033[0;31m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-SUDO=""
-if [[ $EUID -ne 0 ]]; then
-    SUDO="sudo"
-fi
+# Carpeta de la aplicación: la del paquete, o la de este script si se ejecuta
+# desde el código fuente.
+resolve_app_dir() {
+    local source="${BASH_SOURCE[0]}" dir
+    while [[ -h "$source" ]]; do
+        dir="$(cd -P "$(dirname "$source")" >/dev/null 2>&1 && pwd)"
+        source="$(readlink "$source")"
+        [[ $source != /* ]] && source="$dir/$source"
+    done
+    dir="$(cd -P "$(dirname "$source")" >/dev/null 2>&1 && pwd)"
+    for candidate in "$dir" /usr/lib/lizarbe-centro; do
+        if [[ -d "$candidate/lizarbe_tui" ]]; then
+            echo "$candidate"
+            return
+        fi
+    done
+}
+APP_DIR="$(resolve_app_dir)"
 
 print_banner() {
     echo -e "${CYAN}"
     echo "=========================================================="
-    echo "          LIZARBE CLI - SISTEMA Y GESTIÓN DE TEMA         "
+    echo "               CENTRO LIZARBE - LÍNEA DE COMANDOS         "
     echo "=========================================================="
     echo -e "${NC}"
 }
 
-check_internet() {
-    local timeout="${1:-4}"
-    if curl -Is --connect-timeout "$timeout" https://github.com | head -n 1 | grep -q "HTTP"; then
-        return 0
-    fi
-    if curl -Is --connect-timeout "$timeout" https://api.github.com | head -n 1 | grep -q "HTTP"; then
-        return 0
-    fi
-    return 1
-}
-
-ensure_safe_git_repo() {
-    local dir="$1"
-    local url="$2"
-
-    # Registrar en safe.directory a nivel de sistema para evitar errores de ownership
-    if command -v git &>/dev/null; then
-        $SUDO git config --system --add safe.directory "$dir" 2>/dev/null || true
-    fi
-
-    # 1. Si no existe el directorio, clonar directamente desde el repo oficial
-    if [[ ! -d "$dir" ]]; then
-        echo -e "${CYAN}→${NC} Clonando repositorio oficial de Lizarbe Theme en $dir..."
-        $SUDO mkdir -p "$(dirname "$dir")"
-        $SUDO git clone "$url" "$dir"
-        return 0
-    fi
-
-    # 2. Si el directorio existe pero no tiene .git o no es un repo válido
-    if ! git -C "$dir" rev-parse --git-dir &>/dev/null; then
-        echo -e "${YELLOW}[AVISO]${NC} Se detectó $dir sin control de versiones Git o incompleto."
-        echo -e "${CYAN}→${NC} Inicializando y vinculando con el repositorio oficial..."
-        $SUDO git -C "$dir" init -b main 2>/dev/null || $SUDO git -C "$dir" init
-        $SUDO git -C "$dir" remote remove origin 2>/dev/null || true
-        $SUDO git -C "$dir" remote add origin "$url"
-        $SUDO git -C "$dir" fetch origin main
-        $SUDO git -C "$dir" reset --hard origin/main
-        $SUDO git -C "$dir" branch -u origin/main main 2>/dev/null || true
-        return 0
-    fi
-
-    # 3. Si ya es un repo Git, asegurar que apunta al repositorio oficial
-    local current_remote
-    current_remote=$(git -C "$dir" remote get-url origin 2>/dev/null || echo "")
-    if [[ "$current_remote" != *lizarbe513/Lizarbe-Omarchy-Theme* ]]; then
-        echo -e "${YELLOW}[AVISO]${NC} Corrigiendo origen remoto a la URL oficial..."
-        $SUDO git -C "$dir" remote remove origin 2>/dev/null || true
-        $SUDO git -C "$dir" remote add origin "$url"
+need_app() {
+    if [[ -z "$APP_DIR" || ! -f "$APP_DIR/$1" ]]; then
+        echo -e "${RED}[ERROR]${NC} Falta $1. Instala el paquete: sudo pacman -S lizarbe-centro"
+        exit 1
     fi
 }
 
 cmd_update() {
-    local non_interactive=false
-    local force=false
-
-    for arg in "$@"; do
-        case "$arg" in
-            --non-interactive|-y|--yes)
-                non_interactive=true
-                ;;
-            --force|-f)
-                force=true
-                ;;
-        esac
-    done
-
-    if [[ "$non_interactive" == false ]]; then
-        print_banner
+    print_banner
+    echo -e "${CYAN}→${NC} Lizarbe se actualiza junto con el sistema (omarchy update)."
+    if command -v omarchy-update &>/dev/null; then
+        exec omarchy-update "$@"
     fi
-
-    # 1. Comprobar conectividad
-    if [[ "$non_interactive" == false ]]; then
-        echo -e "${CYAN}[1/4]${NC} Verificando conexión con GitHub..."
-    fi
-
-    if ! check_internet 4; then
-        if [[ "$non_interactive" == true ]]; then
-            # En modo desatendido (hook del sistema), salimos de forma limpia para no interrumpir
-            echo -e "${YELLOW}[Lizarbe] Sin conexión a internet; omitiendo actualización del tema.${NC}"
-            return 0
-        else
-            echo -e "${RED}[ERROR]${NC} No se detectó conexión a internet. Conéctate a una red para actualizar tu tema."
-            return 1
-        fi
-    fi
-
-    if [[ "$non_interactive" == false ]]; then
-        echo -e "${GREEN}[OK]${NC} Conexión establecida con éxito."
-    fi
-
-    # 2. Asegurar e inicializar/reparar el repositorio oficial
-    if [[ "$non_interactive" == false ]]; then
-        echo -e "${CYAN}[2/4]${NC} Verificando integridad del repositorio oficial..."
-    fi
-    ensure_safe_git_repo "$REPO_DIR" "$OFFICIAL_REPO_URL"
-
-    # 3. Obtener últimos cambios de GitHub
-    if [[ "$non_interactive" == false ]]; then
-        echo -e "${CYAN}[3/4]${NC} Comprobando actualizaciones en GitHub..."
-    fi
-    $SUDO git -C "$REPO_DIR" fetch origin main
-
-    local local_hash remote_hash
-    local_hash=$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || echo "ninguno")
-    remote_hash=$(git -C "$REPO_DIR" rev-parse origin/main 2>/dev/null || echo "desconocido")
-
-    if [[ "$local_hash" == "$remote_hash" && "$local_hash" != "ninguno" && "$force" == false ]]; then
-        if [[ "$non_interactive" == true ]]; then
-            echo -e "${GREEN}[Lizarbe] El tema ya se encuentra en la versión más reciente (${local_hash:0:7}).${NC}"
-            return 0
-        else
-            echo -e "${GREEN}[OK]${NC} Tu tema Lizarbe ya se encuentra en la última versión (${local_hash:0:7})."
-            read -rp "¿Deseas forzar la reaplicación del tema y configuraciones? [s/N]: " force_reapply
-            if [[ ! "$force_reapply" =~ ^[SsYy]$ ]]; then
-                echo -e "${GREEN}¡Todo al día! No se requirieron cambios.${NC}"
-                return 0
-            fi
-        fi
-    else
-        echo -e "${CYAN}→${NC} Nuevos cambios encontrados. Sincronizando (${local_hash:0:7} → ${remote_hash:0:7})..."
-        $SUDO git -C "$REPO_DIR" reset --hard origin/main
-    fi
-
-    # 4. Aplicar la actualización
-    if [[ "$non_interactive" == false ]]; then
-        echo -e "${CYAN}[4/4]${NC} Aplicando archivos de tema, iconos, branding y dotfiles..."
-    fi
-
-    # Ejecutar update.sh en el contexto correspondiente
-    if [[ $EUID -eq 0 && -n "$SUDO_USER" && "$SUDO_USER" != "root" ]]; then
-        su - "$SUDO_USER" -c "bash '$REPO_DIR/update.sh'"
-    else
-        bash "$REPO_DIR/update.sh"
-    fi
-
-    # Re-aplicar configuración de usuario y corregir Bloq Mayús
-    if command -v lizarbe-apply-user &>/dev/null; then
-        lizarbe-apply-user >/dev/null 2>&1 || true
-    fi
-
-    if [[ "$non_interactive" == false ]]; then
-        echo ""
-        echo -e "${GREEN}=====================================================${NC}"
-        echo -e "${GREEN} ¡Tema Lizarbe actualizado y recargado con éxito!    ${NC}"
-        echo -e "${GREEN}=====================================================${NC}"
-    fi
-    return 0
+    exec omarchy update "$@"
 }
 
 cmd_uninstall() {
     print_banner
-    if [[ ! -f "$REPO_DIR/uninstall.sh" ]]; then
-        echo -e "${RED}[ERROR]${NC} No se encontró el script de desinstalación en $REPO_DIR/uninstall.sh."
-        echo -e "${CYAN}→${NC} Intentando restaurar el repositorio oficial..."
-        ensure_safe_git_repo "$REPO_DIR" "$OFFICIAL_REPO_URL"
-    fi
-
-    bash "$REPO_DIR/uninstall.sh" "$@"
+    need_app uninstall.sh
+    bash "$APP_DIR/uninstall.sh" "$@"
 }
 
 cmd_apply() {
     if command -v lizarbe-apply-user &>/dev/null; then
         lizarbe-apply-user "$@"
-    elif [[ -x "/usr/local/bin/lizarbe-apply-user" ]]; then
-        /usr/local/bin/lizarbe-apply-user "$@"
-    elif [[ -f "$(dirname "${BASH_SOURCE[0]}")/lizarbe-apply-user" ]]; then
-        bash "$(dirname "${BASH_SOURCE[0]}")/lizarbe-apply-user" "$@"
     else
-        echo -e "${RED}[ERROR]${NC} No se encontró la utilidad lizarbe-apply-user."
+        echo -e "${RED}[ERROR]${NC} No se encontró lizarbe-apply-user. Instala: sudo pacman -S lizarbe-tema"
         return 1
     fi
 }
 
 cmd_install() {
     print_banner
-    if [[ ! -f "$REPO_DIR/install.sh" ]]; then
-        echo -e "${YELLOW}[AVISO]${NC} Repositorio local no encontrado. Preparando..."
-        ensure_safe_git_repo "$REPO_DIR" "$OFFICIAL_REPO_URL"
-    fi
-
-    bash "$REPO_DIR/install.sh" "$@"
+    need_app install.sh
+    bash "$APP_DIR/install.sh" "$@"
 }
 
 cmd_status() {
     print_banner
-    echo -e "${BOLD}Estado del Tema Lizarbe:${NC}"
+    echo -e "${BOLD}Paquetes de Lizarbe:${NC}"
     echo "----------------------------------------------------------"
-
-    if [[ -d "$REPO_DIR" ]]; then
-        local local_hash remote_hash remote_url
-        local_hash=$(git -C "$REPO_DIR" rev-parse --short HEAD 2>/dev/null || echo "sin-git")
-        remote_url=$(git -C "$REPO_DIR" remote get-url origin 2>/dev/null || echo "no configurado")
-        echo -e "  Ubicación local : ${CYAN}$REPO_DIR${NC}"
-        echo -e "  Versión local   : ${GREEN}$local_hash${NC}"
-        echo -e "  Repositorio     : $remote_url"
-
-        if check_internet 2; then
-            remote_hash=$(git ls-remote "$OFFICIAL_REPO_URL" HEAD 2>/dev/null | head -n 1 | awk '{print substr($1,1,7)}' || echo "indeterminado")
-            [[ -z "$remote_hash" ]] && remote_hash="indeterminado"
-            echo -e "  Versión remota  : ${CYAN}$remote_hash${NC}"
-            if [[ "$local_hash" == "$remote_hash" && "$local_hash" != "sin-git" ]]; then
-                echo -e "  Sincronización  : ${GREEN}Tema al día con el repositorio oficial.${NC}"
-            else
-                echo -e "  Sincronización  : ${YELLOW}Actualización disponible. Ejecuta: lizarbe update${NC}"
-            fi
+    local line name ver latest
+    while read -r name ver; do
+        latest=$(pacman -Si "$name" 2>/dev/null | awk -F': *' '$1 ~ /^Version/ {print $2; exit}')
+        if [[ -n "$latest" && "$latest" != "$ver" ]]; then
+            echo -e "  $name  ${GREEN}$ver${NC}  ${YELLOW}(disponible: $latest)${NC}"
         else
-            echo -e "  Sincronización  : ${YELLOW}Sin conexión (no se pudo verificar versión remota).${NC}"
+            echo -e "  $name  ${GREEN}$ver${NC}"
         fi
-    else
-        echo -e "  Ubicación local : ${RED}No instalado en $REPO_DIR${NC}"
-    fi
+    done < <(pacman -Q 2>/dev/null | awk '$1 ~ /^lizarbe(-|$)/')
+    echo "  (para actualizar: lizarbe update)"
 
     echo ""
-    echo -e "${BOLD}Configuración del Entorno Omarchy:${NC}"
+    echo -e "${BOLD}Entorno Omarchy:${NC}"
     echo "----------------------------------------------------------"
     if command -v omarchy-theme-current &>/dev/null; then
         echo -e "  Tema activo     : $(omarchy-theme-current 2>/dev/null || echo 'desconocido')"
-    elif command -v omarchy &>/dev/null; then
-        echo -e "  Tema activo     : $(omarchy theme current 2>/dev/null || echo 'desconocido')"
     fi
-
-    if [[ -d "/usr/share/icons/Lizarbe-Red" ]]; then
-        echo -e "  Iconos sistema  : ${GREEN}Instalados (/usr/share/icons/Lizarbe-Red)${NC}"
-    else
-        echo -e "  Iconos sistema  : ${YELLOW}No encontrados${NC}"
-    fi
-
-    if [[ -d "/usr/share/themes/Darky" ]]; then
-        echo -e "  Tema GTK Darky  : ${GREEN}Instalado (/usr/share/themes/Darky)${NC}"
-    else
-        echo -e "  Tema GTK Darky  : ${YELLOW}No encontrado${NC}"
-    fi
+    [[ -d /usr/share/icons/Lizarbe-Red ]] && echo -e "  Iconos          : ${GREEN}Lizarbe-Red${NC}" || echo -e "  Iconos          : ${YELLOW}no encontrados${NC}"
+    [[ -d /usr/share/themes/Darky ]] && echo -e "  Tema GTK        : ${GREEN}Darky${NC}" || echo -e "  Tema GTK        : ${YELLOW}no encontrado${NC}"
     echo "----------------------------------------------------------"
 }
 
 cmd_tui() {
-    local source="${BASH_SOURCE[0]}"
-    while [[ -h "$source" ]]; do
-        local dir
-        dir="$(cd -P "$(dirname "$source")" >/dev/null 2>&1 && pwd)"
-        source="$(readlink "$source")"
-        [[ $source != /* ]] && source="$dir/$source"
-    done
-    local script_dir
-    script_dir="$(cd -P "$(dirname "$source")" >/dev/null 2>&1 && pwd)"
-
-    local tui_root=""
-    for candidate in "$script_dir" "$HOME/Projects/Lizarbe-Omarchy-Theme" "$REPO_DIR"; do
-        if [[ -d "$candidate/lizarbe_tui" ]]; then
-            tui_root="$candidate"
-            break
-        fi
-    done
-
-    if [[ -n "$tui_root" ]] && command -v python3 &>/dev/null; then
-        export PYTHONPATH="$tui_root:${PYTHONPATH:-}"
+    if [[ -n "$APP_DIR" ]] && command -v python3 &>/dev/null; then
+        export PYTHONPATH="$APP_DIR:${PYTHONPATH:-}"
         exec python3 -m lizarbe_tui.cli "$@"
-    else
-        show_help
     fi
+    show_help
 }
 
 show_help() {
@@ -296,19 +116,17 @@ show_help() {
     echo ""
     echo -e "${BOLD}COMANDOS DISPONIBLES:${NC}"
     echo -e "  ${CYAN}(sin argumentos)${NC} / ${CYAN}tui${NC}  Abre la interfaz interactiva TUI de Lizarbe"
-    echo -e "  ${CYAN}update${NC}                  Actualiza el tema desde el repositorio oficial de GitHub"
-    echo -e "                          Opciones: --force, -y / --non-interactive"
+    echo -e "  ${CYAN}update${NC}                  Actualiza el sistema y Lizarbe (omarchy update)"
     echo -e "  ${CYAN}uninstall${NC} (o ${CYAN}unistall${NC}) Desinstala componentes del tema o suites de software"
-    echo -e "                          Opciones: --all, --theme-only, --apps-only, --help"
+    echo -e "                          Opciones: --all, --apps-only, --help"
     echo -e "  ${CYAN}apply${NC}                   Aplica configuraciones, dotfiles, iconos y recarga el tema"
-    echo -e "  ${CYAN}status${NC}                  Muestra el estado de la versión local vs remota"
+    echo -e "  ${CYAN}status${NC}                  Muestra las versiones de los paquetes de Lizarbe"
     echo -e "  ${CYAN}install${NC}                 Ejecuta el asistente de instalación de Lizarbe"
     echo -e "  ${CYAN}help${NC}                    Muestra esta ayuda"
     echo ""
     echo -e "${BOLD}EJEMPLOS:${NC}"
     echo "  lizarbe                  # Abre el panel TUI interactivo"
     echo "  lizarbe update"
-    echo "  lizarbe update --force"
     echo "  lizarbe apply"
     echo "  lizarbe status"
     echo "  lizarbe uninstall --theme-only"

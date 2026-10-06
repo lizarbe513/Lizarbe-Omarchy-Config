@@ -1,6 +1,6 @@
 """
 Módulo de Gestión de Sistema, Dotfiles, Suites y Paquetes para Lizarbe Omarchy Theme.
-Centraliza todas las funciones de lizarbe, lizarbe-apply-user, install.sh, update.sh y uninstall.sh.
+Centraliza todas las funciones de lizarbe, lizarbe-apply-user, install.sh y uninstall.sh.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from typing import Dict, Any, List, Set, Tuple, Optional
 
 
 class SystemManager:
-    OFFICIAL_REPO_URL = "https://github.com/lizarbe513/Lizarbe-Omarchy-Theme.git"
+    OFFICIAL_REPO_URL = "https://lizarbe513.github.io/lizarbe-repo"
 
     # Definición de las 7 suites modulares de Lizarbe
     SUITES_SPEC: List[Tuple[str, str, str, str, str]] = [
@@ -96,12 +96,9 @@ class SystemManager:
         here = Path(__file__).resolve().parent.parent.parent
         if (here / "install.sh").exists():
             return here
-        user_proj = Path.home() / "Projects" / "Lizarbe-Omarchy-Theme"
-        if (user_proj / "install.sh").exists():
-            return user_proj
-        opt_dir = Path("/opt/Lizarbe-Omarchy-Theme")
-        if opt_dir.exists():
-            return opt_dir
+        pkg_dir = Path("/usr/lib/lizarbe-centro")
+        if (pkg_dir / "install.sh").exists():
+            return pkg_dir
         return here
 
     def refresh_installed_packages(self) -> Set[str]:
@@ -214,54 +211,61 @@ class SystemManager:
         br_dir = Path.home() / ".config" / "omarchy" / "branding"
         return (br_dir / "about.txt").exists() or (br_dir / "screensaver.txt").exists()
 
-    def is_omarchy_hook_installed(self) -> bool:
-        hook_f = Path.home() / ".config" / "omarchy" / "hooks" / "post-update.d" / "00-lizarbe-update.hook"
-        return hook_f.exists()
-
     def is_desktop_entry_installed(self) -> bool:
         return (
             (Path.home() / ".local" / "share" / "applications" / "lizarbe.desktop").exists()
             or Path("/usr/share/applications/lizarbe.desktop").exists()
         )
 
+    REPO_DB_URL = "https://lizarbe513.github.io/lizarbe-repo/x86_64/lizarbe.db"
+
     def get_local_git_hash(self) -> str:
-        for d in [self.repo_dir, Path("/opt/Lizarbe-Omarchy-Theme")]:
-            if (d / ".git").exists():
-                try:
-                    res = subprocess.run(
-                        ["git", "-C", str(d), "rev-parse", "--short", "HEAD"],
-                        capture_output=True,
-                        text=True,
-                        timeout=2,
-                    )
-                    if res.returncode == 0 and res.stdout.strip():
-                        return res.stdout.strip()
-                except Exception:
-                    pass
-        return "local"
+        """Versión instalada del paquete `lizarbe` (el nombre se conserva por compatibilidad)."""
+        try:
+            res = subprocess.run(["pacman", "-Q", "lizarbe"], capture_output=True, text=True, timeout=3)
+            if res.returncode == 0 and res.stdout.split():
+                return res.stdout.split()[1]
+        except Exception:
+            pass
+        return "sin paquete"
+
+    def _fetch_repo_versions(self) -> Dict[str, str]:
+        """Versiones publicadas en el repositorio de Lizarbe (lee lizarbe.db en línea)."""
+        import io
+        import tarfile
+        import urllib.request
+
+        with urllib.request.urlopen(self.REPO_DB_URL, timeout=5) as r:
+            data = r.read()
+        out: Dict[str, str] = {}
+        with tarfile.open(fileobj=io.BytesIO(data)) as tf:
+            for name in tf.getnames():
+                if "/" in name:
+                    continue
+                m = re.match(r"^(.+)-([^-]+-[^-]+)$", name)
+                if m:
+                    out[m.group(1)] = m.group(2)
+        return out
 
     def check_remote_version(self) -> Tuple[bool, str, str]:
-        """Consulta el último commit en GitHub y actualiza la caché de estado."""
-        local_h = self.get_local_git_hash()
+        """Compara los paquetes lizarbe-* instalados con los del repositorio en línea."""
         try:
-            res = subprocess.run(
-                ["git", "ls-remote", self.OFFICIAL_REPO_URL, "HEAD"],
-                capture_output=True,
-                text=True,
-                timeout=4,
+            published = self._fetch_repo_versions()
+            res = subprocess.run(["pacman", "-Q"], capture_output=True, text=True, timeout=3)
+            installed = dict(
+                line.split()[:2] for line in res.stdout.splitlines() if line.split() and line.split()[0] in published
             )
-            if res.returncode == 0 and res.stdout.strip():
-                remote_h = res.stdout.strip().split()[0][:7]
-                self.remote_hash_cache = remote_h
-                if local_h == remote_h:
-                    self.sync_state_cache = f"Al dia ({remote_h})"
-                else:
-                    self.sync_state_cache = f"Update disponible ({local_h} -> {remote_h})"
-                return True, remote_h, self.sync_state_cache
+            pending = [n for n, v in installed.items() if v != published[n]]
+            self.remote_hash_cache = published.get("lizarbe", "?")
+            if pending:
+                self.sync_state_cache = "Update disponible (" + ", ".join(sorted(pending)) + ")"
+            else:
+                self.sync_state_cache = f"Al dia ({self.remote_hash_cache})"
+            return True, self.remote_hash_cache, self.sync_state_cache
         except Exception:
             pass
         self.remote_hash_cache = "Sin conexion"
-        self.sync_state_cache = "Sin conexion a GitHub"
+        self.sync_state_cache = "Sin conexion al repositorio de Lizarbe"
         return False, self.remote_hash_cache, self.sync_state_cache
 
     def load_settings_dict(self, current_theme: str, current_wallpaper: str) -> Dict[str, Any]:
@@ -276,7 +280,6 @@ class SystemManager:
             "starship": self.is_starship_configured(),
             "branding": self.is_branding_configured(),
             "zen_default": self.is_package_installed("zen-browser-bin"),
-            "omarchy_hook": self.is_omarchy_hook_installed(),
             "desktop_entry": self.is_desktop_entry_installed(),
         }
         for s_id, _, _, _, _ in self.SUITES_SPEC:
@@ -417,34 +420,10 @@ class SystemManager:
         except Exception:
             return False
 
-    def apply_omarchy_hook(self, enable: bool = True) -> bool:
-        """Instala o elimina el hook 00-lizarbe-update.hook en ~/.config/omarchy/hooks/post-update.d."""
-        hook_dir = Path.home() / ".config" / "omarchy" / "hooks" / "post-update.d"
-        hook_file = hook_dir / "00-lizarbe-update.hook"
-        try:
-            if enable:
-                hook_dir.mkdir(parents=True, exist_ok=True)
-                hook_content = """#!/bin/bash
-# Hook prioritario post-update para actualizar tema Lizarbe
-if command -v lizarbe &>/dev/null; then
-    lizarbe update --non-interactive || true
-elif [[ -x /usr/local/bin/lizarbe ]]; then
-    /usr/local/bin/lizarbe update --non-interactive || true
-elif command -v lizarbe-update &>/dev/null; then
-    lizarbe-update --non-interactive || true
-fi
-"""
-                hook_file.write_text(hook_content, encoding="utf-8")
-                hook_file.chmod(0o755)
-            else:
-                if hook_file.exists():
-                    hook_file.unlink()
-            return True
-        except Exception:
-            return False
-
     def ensure_desktop_entry(self) -> bool:
-        """Registra lizarbe.desktop en ~/.local/share/applications/ y el ejecutable lizarbe-tui."""
+        """En desarrollo (sin paquete) registra lizarbe.desktop y lizarbe-tui en el usuario."""
+        if Path("/usr/share/applications/lizarbe.desktop").exists() and Path("/usr/bin/lizarbe-tui").exists():
+            return True
         app_dir = Path.home() / ".local" / "share" / "applications"
         bin_dir = Path.home() / ".local" / "bin"
         dest = app_dir / "lizarbe.desktop"
@@ -482,9 +461,9 @@ Keywords=lizarbe;omarchy;theme;tema;suites;config;tui;hyprland;
 
     def run_apply_user_script(self, target_theme: Optional[str] = None) -> bool:
         """Ejecuta lizarbe-apply-user para sincronizar todos los enlaces, dotfiles y el tema."""
-        script = self.repo_dir / "lizarbe-apply-user"
+        script = Path("/usr/bin/lizarbe-apply-user")
         if not script.exists():
-            script = Path("/usr/local/bin/lizarbe-apply-user")
+            script = self.repo_dir / "lizarbe-apply-user"
         if script.exists():
             cmd = ["bash", str(script), os.environ.get("USER", "")]
             if target_theme:

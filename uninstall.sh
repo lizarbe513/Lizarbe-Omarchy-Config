@@ -75,60 +75,32 @@ uninstall_theme() {
         fi
     fi
 
-    # 2. Eliminar temas Lizarbe de omarchy (raíz y usuario)
-    if [[ -d "/usr/share/omarchy/themes/lizarbe" || -d "/usr/share/omarchy/themes/lizarbe-light" ]]; then
-        info "Eliminando temas Lizarbe de /usr/share/omarchy/themes/..."
-        $SUDO rm -rf "/usr/share/omarchy/themes/lizarbe" "/usr/share/omarchy/themes/lizarbe-light"
+    # 2. Quitar los paquetes (temas, branding, fastfetch, starship, iconos y GTK
+    #    son archivos del paquete lizarbe-tema; el metapaquete lizarbe depende de él)
+    local pkgs=()
+    pacman -Qq lizarbe &>/dev/null && pkgs+=(lizarbe)
+    pacman -Qq lizarbe-tema &>/dev/null && pkgs+=(lizarbe-tema)
+    if [[ ${#pkgs[@]} -gt 0 ]]; then
+        info "Desinstalando: ${pkgs[*]}..."
+        $SUDO pacman -Rns --noconfirm "${pkgs[@]}" || warn "pacman no pudo quitar ${pkgs[*]}"
     fi
+
+    # 3. Limpiar lo que Lizarbe dejó en tu usuario
     rm -rf "$HOME/.config/omarchy/themes/lizarbe" "$HOME/.config/omarchy/themes/lizarbe-light"
-
-    # 3. Eliminar branding propio (raíz y usuario)
-    info "Limpiando branding personalizado..."
-    $SUDO rm -f "/usr/share/omarchy/branding/about.txt" "/usr/share/omarchy/branding/logo.png" "/usr/share/omarchy/branding/screensaver.txt" 2>/dev/null || true
-    $SUDO rm -f "/etc/omarchy/branding/about.txt" "/etc/omarchy/branding/logo.png" "/etc/omarchy/branding/screensaver.txt" 2>/dev/null || true
     rm -f "$HOME/.config/omarchy/branding/about.txt" "$HOME/.config/omarchy/branding/logo.png" "$HOME/.config/omarchy/branding/screensaver.txt"
-
-    # 4. Limpiar Fastfetch y Starship (raíz y usuario)
-    info "Limpiando configuración de Fastfetch y Starship..."
-    $SUDO rm -rf "/etc/xdg/fastfetch" 2>/dev/null || true
-    $SUDO rm -f "/etc/starship.toml" 2>/dev/null || true
-    if [[ -d "$HOME/.config/fastfetch" ]]; then
-        rm -f "$HOME/.config/fastfetch/logo.txt"
-    fi
-
-    # 5. Eliminar tema de iconos Lizarbe-Red (raíz y usuario)
-    if [[ -d "/usr/share/icons/Lizarbe-Red" ]]; then
-        info "Eliminando pack de iconos Lizarbe-Red de /usr/share/icons/..."
-        $SUDO rm -rf "/usr/share/icons/Lizarbe-Red"
-    fi
-    if [[ -d "$HOME/.local/share/icons/Lizarbe-Red" ]]; then
+    rm -f "$HOME/.config/fastfetch/logo.txt"
+    if [[ -d "$HOME/.local/share/icons/Lizarbe-Red" || -L "$HOME/.local/share/icons/Lizarbe-Red" ]]; then
         rm -rf "$HOME/.local/share/icons/Lizarbe-Red"
         rm -f "$HOME/.icons/Lizarbe-Red"
     fi
-
-    # 6. Eliminar tema GTK Darky (raíz y usuario)
-    if [[ -d "/usr/share/themes/Darky" ]]; then
-        info "Eliminando tema GTK Darky de /usr/share/themes/..."
-        $SUDO rm -rf "/usr/share/themes/Darky"
-    fi
-    if [[ -d "$HOME/.local/share/themes/Darky" ]]; then
-        rm -rf "$HOME/.local/share/themes/Darky"
-    fi
+    rm -rf "$HOME/.local/share/themes/Darky"
     for f in "$HOME/.config/gtk-4.0/gtk.css" "$HOME/.config/gtk-4.0/gtk-dark.css" "$HOME/.config/gtk-4.0/assets"; do
         if [[ -L "$f" && "$(readlink -f "$f" 2>/dev/null)" == *Darky* ]]; then
             rm -f "$f"
         fi
     done
-
-    # 7. Eliminar binarios de la aplicación Lizarbe, entrada .desktop y hooks
-    info "Eliminando binarios, entrada de aplicaciones y hooks de Lizarbe..."
-    $SUDO rm -f "/usr/local/bin/lizarbe" "/usr/local/bin/lizarbe-tui" "/usr/local/bin/lizarbe-update" "/usr/local/bin/lizarbe-apply-user" 2>/dev/null || true
-    $SUDO rm -f "/usr/share/applications/lizarbe.desktop" 2>/dev/null || true
-    $SUDO rm -f "/etc/pacman.d/hooks/00-lizarbe-update.hook" 2>/dev/null || true
-    $SUDO rm -f "/etc/skel/.config/omarchy/hooks/post-update.d/00-lizarbe-update.hook" 2>/dev/null || true
-    rm -f "$HOME/.config/omarchy/hooks/post-update.d/00-lizarbe-update.hook" 2>/dev/null || true
-    rm -f "$HOME/.local/bin/lizarbe" "$HOME/.local/bin/lizarbe-tui" "$HOME/.local/bin/lizarbe-update" "$HOME/.local/bin/lizarbe-apply-user" 2>/dev/null || true
-    rm -f "$HOME/.local/share/applications/lizarbe.desktop" 2>/dev/null || true
+    rm -f "$HOME/.config/omarchy/hooks/post-update.d/00-lizarbe-update.hook" \
+        "$HOME/.local/share/applications/lizarbe.desktop"
 
     success "Tema Lizarbe revertido y desinstalado exitosamente de la raíz y usuario."
 }

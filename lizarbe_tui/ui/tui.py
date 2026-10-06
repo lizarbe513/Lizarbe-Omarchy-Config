@@ -230,12 +230,6 @@ class LizarbeTUI:
                 "toggle",
             ),
             SectionItem(
-                "omarchy_hook",
-                "Hook Auto-Update",
-                "Actualizar Lizarbe con omarchy update",
-                "toggle",
-            ),
-            SectionItem(
                 "header:dotfiles_actions",
                 "ACCIONES RAPIDAS DEL ENTORNO",
                 "Aplicacion directa de utilidades del sistema",
@@ -307,31 +301,24 @@ class LizarbeTUI:
             ),
             SectionItem(
                 "action:update_github",
-                "Actualizar Sistema Lizarbe (lizarbe update)",
-                "Descargar e instalar parches, temas y dotfiles oficiales",
+                "Actualizar sistema (omarchy update)",
+                "Actualiza Omarchy y todos los paquetes de Lizarbe",
                 "action",
                 action_label=" Actualizar ",
             ),
             SectionItem(
                 "action:check_remote",
                 "Buscar Actualizaciones Ahora",
-                f"Servidor: {self.sys_mgr.OFFICIAL_REPO_URL}",
+                f"Repositorio: {self.sys_mgr.OFFICIAL_REPO_URL}",
                 "action",
                 action_label=" Comprobar ",
             ),
             SectionItem(
                 "action:update_force",
-                "Reparar / Reaplicar Fábrica (--force)",
-                "Restaurar temas, iconos y dotfiles oficiales si fueron alterados",
+                "Reparar integración de Lizarbe",
+                "Revisa el menú, reglas de ventana y archivos de Lizarbe y los arregla",
                 "action",
                 action_label=" Reparar ",
-            ),
-            SectionItem(
-                "action:run_update_sh",
-                "Sincronizar raíz del sistema (update.sh)",
-                "Copiar componentes del repo a /usr/share y /etc",
-                "action",
-                action_label=" Sincronizar ",
             ),
             SectionItem(
                 "header:system_info",
@@ -804,7 +791,7 @@ class LizarbeTUI:
     def _run_interactive_command(self, title: str, cmd: List[str], pause_after: bool = True) -> int:
         """
         Suspende temporalmente el buffer alternativo de la TUI para ejecutar comandos
-        interactivos (como yay, pacman, sudo, update.sh, install.sh o uninstall.sh)
+        interactivos (como yay, pacman, sudo, install.sh o uninstall.sh)
         mostrando su salida en tiempo real, y luego restaura la TUI limpiamente.
         """
         fd = sys.stdin.fileno()
@@ -2571,17 +2558,17 @@ class LizarbeTUI:
             return
 
         if action_key == "action:check_remote":
-            self.status_message = "Consultando GitHub..."
+            self.status_message = "Consultando el repositorio de Lizarbe..."
             self.render()
             ok, rem, sync_msg = self.sys_mgr.check_remote_version()
             self.section_items["status"] = self._build_status_section_items()
-            self.status_message = f"✓ {sync_msg}" if ok else "Sin conexion a GitHub."
+            self.status_message = f"✓ {sync_msg}" if ok else "Sin conexion al repositorio."
             return
 
         if action_key == "action:update_github":
             self._run_interactive_command(
-                "Actualizando Tema Lizarbe desde GitHub",
-                ["bash", str(self.sys_mgr.repo_dir / "lizarbe"), "update"],
+                "Actualizando el sistema (omarchy update)",
+                ["omarchy-update"],
             )
             self._refresh_all_state()
             self.status_message = "✓ Actualización de Lizarbe completada."
@@ -2589,20 +2576,11 @@ class LizarbeTUI:
 
         if action_key == "action:update_force":
             self._run_interactive_command(
-                "Reaplicación Forzada de Lizarbe (--force)",
-                ["bash", str(self.sys_mgr.repo_dir / "lizarbe"), "update", "--force"],
+                "Reparando la integración de Lizarbe",
+                ["bash", "-c", "lizarbe-doctor --fix; lizarbe apply"],
             )
             self._refresh_all_state()
-            self.status_message = "✓ Reaplicación forzada completada."
-            return
-
-        if action_key == "action:run_update_sh":
-            self._run_interactive_command(
-                "Sincronizando Tema y Dotfiles en Raíz (update.sh)",
-                ["bash", str(self.sys_mgr.repo_dir / "update.sh")],
-            )
-            self._refresh_all_state()
-            self.status_message = "✓ Sincronización en raíz completada."
+            self.status_message = "✓ Reparación completada."
             return
 
         # Perfiles de instalación rápida
@@ -2873,8 +2851,6 @@ class LizarbeTUI:
             self.sys_mgr.apply_starship_user(bool(self.settings.get("starship")))
         if self.settings.get("branding") != self.saved_settings.get("branding"):
             self.sys_mgr.apply_branding_user(bool(self.settings.get("branding")))
-        if self.settings.get("omarchy_hook") != self.saved_settings.get("omarchy_hook"):
-            self.sys_mgr.apply_omarchy_hook(bool(self.settings.get("omarchy_hook")))
 
         # 4. Webapps individuales
         for w_id, _, _, _ in self.sys_mgr.WEBAPPS_SPEC:
