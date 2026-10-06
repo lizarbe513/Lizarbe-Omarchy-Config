@@ -30,7 +30,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    loader = StartupLoader(title="LIZARBE Theme & Suite")
+    loader = StartupLoader(title="CENTRO LIZARBE")
     loader.start()
     try:
         app = LizarbeTUI(was_tiled=loader.was_tiled)
