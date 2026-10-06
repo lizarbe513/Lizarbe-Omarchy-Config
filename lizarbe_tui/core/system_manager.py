@@ -642,14 +642,7 @@ Keywords=lizarbe;omarchy;theme;tema;suites;config;tui;hyprland;
         except Exception:
             return False
 
-    def ensure_hyprland_rule(self) -> None:
-        """Reglas de ventana flotante en su propio archivo (lizarbe-hypr-rules)."""
-        script = shutil.which("lizarbe-hypr-rules") or str(self.repo_dir / "lizarbe-hypr-rules")
-        if Path(script).exists():
-            subprocess.run(["bash", script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15)
-
     def open_kdeconnect_gui(self) -> bool:
-        self.ensure_hyprland_rule()
         for app in ["kdeconnect-app", "kdeconnect-settings", "kdeconnect-indicator"]:
             if shutil.which(app):
                 try:

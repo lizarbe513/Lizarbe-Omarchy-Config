@@ -92,24 +92,8 @@ elif [[ -d "/usr/share/omarchy/branding" ]]; then
     cp -r /usr/share/omarchy/branding/* "$USER_HOME/.config/omarchy/branding/" 2>/dev/null || true
 fi
 
-# 7. Reglas de ventana flotante (Centro Lizarbe y KDE Connect), en su propio archivo.
-# La tecla Compose/Bloq Mayús se configura en Escritorio > Teclado.
-HYPR_DIR="$USER_HOME/.config/hypr"
-if command -v lizarbe-hypr-rules &>/dev/null; then
-    lizarbe-hypr-rules "$HYPR_DIR" || true
-fi
-
-# 7c. Registrar entrada de escritorio (.desktop) y binario local para el centro de aplicaciones
-if [[ -f "$THEME_SRC/lizarbe.desktop" ]]; then
-    mkdir -p "$USER_HOME/.local/share/applications"
-    cp -f "$THEME_SRC/lizarbe.desktop" "$USER_HOME/.local/share/applications/lizarbe.desktop"
-fi
-if [[ -f "$THEME_SRC/lizarbe" ]]; then
-    mkdir -p "$USER_HOME/.local/bin"
-    cp -f "$THEME_SRC/lizarbe" "$USER_HOME/.local/bin/lizarbe"
-    ln -sf "$USER_HOME/.local/bin/lizarbe" "$USER_HOME/.local/bin/lizarbe-tui" 2>/dev/null || true
-    chmod 755 "$USER_HOME/.local/bin/lizarbe" "$USER_HOME/.local/bin/lizarbe-tui" 2>/dev/null || true
-fi
+# 7. Las reglas de ventana flotante las gestiona lizarbe-doctor (paquete lizarbe-menu);
+# la tecla Compose/Bloq Mayús se configura en Escritorio > Teclado.
 
 # 8. Activar el tema Lizarbe a través de Omarchy
 export OMARCHY_THEME_HEADLESS=1

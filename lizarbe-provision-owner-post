@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# lizarbe-provision-owner-post: se ejecuta tras registrar al usuario dueño en el
+# primer arranque (omarchy-provision-owner.service) y aplica la identidad Lizarbe.
+set -e
+
+for u in $(awk -F: '$3 >= 1000 && $3 < 60000 {print $1}' /etc/passwd 2>/dev/null); do
+    u_home=$(getent passwd "$u" | cut -d: -f6)
+    if [[ -d "$u_home" && -x /usr/bin/lizarbe-apply-user ]]; then
+        su - "$u" -c "/usr/bin/lizarbe-apply-user" 2>/dev/null || true
+    fi
+done
+
+exit 0
