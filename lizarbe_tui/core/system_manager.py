@@ -298,6 +298,11 @@ class SystemManager:
     # ACCIONES DE CONFIGURACIÓN DE USUARIO Y DOTFILES (SIN SUDO)
     # =========================================================================
 
+    @staticmethod
+    def _asset(dev: Path, system: Path) -> Path:
+        """Ruta de un recurso: la del código fuente si existe, si no la del paquete lizarbe-tema."""
+        return dev if dev.exists() else system
+
     def apply_icons_user(self, enable: bool = True) -> bool:
         """Enlaza o desenlaza el pack de iconos Lizarbe-Red en el directorio del usuario."""
         user_icons = Path.home() / ".local" / "share" / "icons" / "Lizarbe-Red"
@@ -371,7 +376,7 @@ class SystemManager:
     def apply_fastfetch_user(self, enable: bool = True) -> bool:
         """Copia o remueve la configuración de Fastfetch con el logo ASCII de Lizarbe."""
         ff_dir = Path.home() / ".config" / "fastfetch"
-        src_dir = self.repo_dir / "config" / "fastfetch"
+        src_dir = self._asset(self.repo_dir / "config" / "fastfetch", Path("/etc/xdg/fastfetch"))
         try:
             if enable:
                 ff_dir.mkdir(parents=True, exist_ok=True)
@@ -391,7 +396,7 @@ class SystemManager:
     def apply_starship_user(self, enable: bool = True) -> bool:
         """Copia la configuración de Starship en ~/.config/starship.toml."""
         st_dest = Path.home() / ".config" / "starship.toml"
-        st_src = self.repo_dir / "config" / "starship.toml"
+        st_src = self._asset(self.repo_dir / "config" / "starship.toml", Path("/etc/starship.toml"))
         try:
             if enable and st_src.exists():
                 st_dest.parent.mkdir(parents=True, exist_ok=True)
@@ -403,7 +408,7 @@ class SystemManager:
     def apply_branding_user(self, enable: bool = True) -> bool:
         """Copia o remueve el branding de Omarchy en ~/.config/omarchy/branding."""
         br_dest = Path.home() / ".config" / "omarchy" / "branding"
-        br_src = self.repo_dir / "config" / "omarchy" / "branding"
+        br_src = self._asset(self.repo_dir / "config" / "omarchy" / "branding", Path("/usr/share/omarchy/branding"))
         try:
             if enable:
                 br_dest.mkdir(parents=True, exist_ok=True)
