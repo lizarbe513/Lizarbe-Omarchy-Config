@@ -150,6 +150,12 @@ if [[ -z "$TARGET_THEME" ]]; then
     fi
 fi
 
+# Sanitizar nombre de tema para prevenir inyección de comandos
+if [[ ! "$TARGET_THEME" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+    echo "[ERROR] Nombre de tema inválido: $TARGET_THEME" >&2
+    exit 1
+fi
+
 if command -v omarchy-theme-set &>/dev/null; then
     if [[ "$(id -u)" -eq 0 && "$TARGET_USER" != "root" ]]; then
         su - "$TARGET_USER" -c "OMARCHY_THEME_HEADLESS=1 omarchy-theme-set '$TARGET_THEME' || true" 2>/dev/null || true

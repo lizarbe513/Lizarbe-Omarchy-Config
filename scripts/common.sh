@@ -44,8 +44,26 @@ error() {
 # Comprobar que yay esté disponible
 check_aur_helper() {
     if ! command -v yay &>/dev/null; then
-        warn "yay no está instalado. Utilizando pacman..."
-        AUR_HELPER="sudo pacman -S --needed --noconfirm"
+        error "yay no está instalado. Es necesario para instalar paquetes de AUR."
+        error "Instálalo primero: https://github.com/Jguer/yay"
+        echo -e "  ${CYAN}sudo pacman -S --needed git base-devel${NC}"
+        echo -e "  ${CYAN}git clone https://aur.archlinux.org/yay-bin.git && cd yay-bin && makepkg -si${NC}"
+        exit 1
+    fi
+
+    # yay no puede ejecutarse como root; si estamos como root, delegar al usuario real
+    if [[ $EUID -eq 0 ]]; then
+        local real_user="${SUDO_USER:-${OMARCHY_INSTALL_USER:-}}"
+        if [[ -z "$real_user" || "$real_user" == "root" ]]; then
+            real_user=$(awk -F: '$3 >= 1000 && $3 < 65000 {print $1; exit}' /etc/passwd 2>/dev/null || true)
+        fi
+        if [[ -n "$real_user" && "$real_user" != "root" ]]; then
+            AUR_HELPER="sudo -u $real_user yay -S --needed --noconfirm"
+        else
+            error "No se puede determinar el usuario real para ejecutar yay (yay no funciona como root)."
+            error "Ejecuta este instalador como usuario normal (sin sudo). El script pedirá permisos cuando los necesite."
+            exit 1
+        fi
     else
         AUR_HELPER="yay -S --needed --noconfirm"
     fi
