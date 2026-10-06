@@ -1,0 +1,5 @@
+# Configuración de superficies y barra para el tema Lizarbe
+[bar]
+background = "#08080B"
+text = "#d8d8d8"
+accent = "#E31B23"
