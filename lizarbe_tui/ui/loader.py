@@ -1,6 +1,6 @@
 """
 Pantalla de carga inicial (Splash Loader) para Lizarbe Theme & Suite.
-Muestra una señal de carga elegante con 3 puntitos animados mientras
+Muestra una señal de carga elegante con 3 cuadritos que saltan mientras
 la aplicación inicializa sus módulos, temas y estado de paquetes en segundo plano.
 """
 
@@ -17,7 +17,7 @@ from lizarbe_tui.core.hypr_ipc import HyprIPC
 
 class StartupLoader:
     """
-    Renderiza una pantalla de carga ligera y centrada con animación de 3 puntitos.
+    Renderiza una pantalla de carga ligera y centrada con 3 cuadritos que saltan por turnos.
     Se ejecuta en un hilo secundario durante la inicialización de LizarbeTUI.
     """
 
@@ -77,20 +77,24 @@ class StartupLoader:
         muted_ansi = f"\033[38;2;{mr};{mg};{mb}m"
         reset_ansi = "\033[0m"
 
-        active_dot = frame_idx % 3
-        dots_parts = []
+        # Tres cuadritos: saltan uno tras otro y descansan un instante antes de repetir.
+        jumper = frame_idx % 4
+        top_parts = []
+        bottom_parts = []
         for i in range(3):
-            if i == active_dot:
-                dots_parts.append(f"{accent_ansi}●{reset_ansi}")
+            if i == jumper:
+                top_parts.append(f"{accent_ansi}■{reset_ansi}")
+                bottom_parts.append(" ")
             else:
-                dots_parts.append(f"{muted_ansi}○{reset_ansi}")
-        dots_str = " ".join(dots_parts)
+                top_parts.append(" ")
+                bottom_parts.append(f"{muted_ansi}■{reset_ansi}")
+        top_str = " ".join(top_parts)
+        bottom_str = " ".join(bottom_parts)
 
         title_styled = f"{accent_ansi}󰏘  {self.title}{reset_ansi}"
-        dots_styled = dots_str
 
         title_visual_len = len(f"󰏘  {self.title}")
-        dots_visual_len = 5  # "● ○ ○"
+        dots_visual_len = 5  # "■ ■ ■"
 
         center_y = max(2, (rows // 2) - 1)
         title_x = max(1, (cols - title_visual_len) // 2)
@@ -98,7 +102,8 @@ class StartupLoader:
 
         buf = [
             f"\033[{center_y};{title_x}H\033[K{title_styled}",
-            f"\033[{center_y + 2};{dots_x}H\033[K{dots_styled}",
+            f"\033[{center_y + 2};{dots_x}H\033[K{top_str}",
+            f"\033[{center_y + 3};{dots_x}H\033[K{bottom_str}",
         ]
 
         sys.stdout.write("".join(buf))
@@ -110,7 +115,7 @@ class StartupLoader:
         while not self._stop_event.is_set():
             self._render_frame(frame)
             frame += 1
-            time.sleep(0.14)
+            time.sleep(0.12)
 
     def start(self) -> None:
         """Inicia la pantalla de carga si estamos en una terminal TTY."""
