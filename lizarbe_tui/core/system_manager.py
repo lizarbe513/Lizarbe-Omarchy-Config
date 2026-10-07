@@ -649,7 +649,7 @@ Keywords=lizarbe;omarchy;theme;tema;suites;config;tui;hyprland;
             return False
 
     def open_kdeconnect_gui(self) -> bool:
-        for app in ["kdeconnect-app", "kdeconnect-settings", "kdeconnect-indicator"]:
+        for app in ["lizarbe-kdeconnect", "kdeconnect-app", "kdeconnect-settings", "kdeconnect-indicator"]:
             if shutil.which(app):
                 try:
                     subprocess.Popen([app], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
