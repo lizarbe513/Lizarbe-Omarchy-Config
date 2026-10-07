@@ -134,7 +134,7 @@ class StartupLoader:
         self._thread = threading.Thread(target=self._worker, daemon=True, name="StartupLoaderThread")
         self._thread.start()
 
-    def stop(self, min_duration: float = 0.55) -> None:
+    def stop(self, min_duration: float = 0.3) -> None:
         """Detiene el hilo asegurando un mínimo de tiempo visible para la animación."""
         if not self._is_active or not self._thread:
             return
