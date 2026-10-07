@@ -1,8 +1,8 @@
 """
-Interfaz TUI Monolítica para Lizarbe Omarchy Theme (Estilo Meca HyprConfig / HyprMod).
-Arquitectura de 2 paneles (Categorías a la izquierda, Controles y Acciones de Lizarbe a la derecha),
-con soporte completo de ratón, menús desplegables, tarjetas de temas, controles en cuadrados cerrados,
-menú contextual de clic derecho y modales interactivos de confirmación.
+Interfaz TUI del Centro Lizarbe.
+Dos paneles (categorías a la izquierda, controles y acciones a la derecha), con soporte de ratón,
+menús desplegables, tarjetas de aplicaciones, menú contextual de clic derecho y ventanas de
+confirmación.
 """
 
 from __future__ import annotations
@@ -60,7 +60,6 @@ class SectionItem:
 class LizarbeTUI:
     """
     Centro Lizarbe: identidad, software y actualizaciones de Lizarbe OS.
-    Comparte la arquitectura, proporciones y controles de Meca HyprConfig.
     """
 
     SECTIONS = [

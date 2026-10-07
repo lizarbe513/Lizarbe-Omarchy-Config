@@ -14,7 +14,7 @@ if [[ -z "$TARGET_USER" || "$TARGET_USER" == "root" ]]; then
         TARGET_USER="$OMARCHY_INSTALL_USER"
     else
         # Buscar el primer usuario con UID >= 1000 en /home
-        FIRST_USER=$(awk -F: '$3 >= 1000 && $3 < 65000 {print $1; exit}' /etc/passwd 2>/dev/null || true)
+        FIRST_USER=$(awk -F: '$3 >= 1000 && $3 < 60000 {print $1; exit}' /etc/passwd 2>/dev/null || true)
         if [[ -n "$FIRST_USER" ]]; then
             TARGET_USER="$FIRST_USER"
         else
@@ -46,12 +46,13 @@ if [[ -d "$USER_HOME/Projects" ]] && command -v gio &>/dev/null; then
     gio set -t string "$USER_HOME/Projects" metadata::custom-icon-name folder-projects 2>/dev/null || true
 fi
 
-# 2. Enlaces de temas Omarchy (Dark y Light) para desarrollo y reactividad local
+# 2. Enlaces de los temas Lizarbe (oscuro, claro y arena) para desarrollo y reactividad local
 mkdir -p "$USER_HOME/.config/omarchy/themes"
-if [[ -d "$THEME_SRC/config/omarchy/themes/lizarbe" ]]; then
-    ln -sfn "$THEME_SRC/config/omarchy/themes/lizarbe" "$USER_HOME/.config/omarchy/themes/lizarbe"
-    ln -sfn "$THEME_SRC/config/omarchy/themes/lizarbe-light" "$USER_HOME/.config/omarchy/themes/lizarbe-light"
-fi
+for t in lizarbe lizarbe-light lizarbe-arena; do
+    if [[ -d "$THEME_SRC/config/omarchy/themes/$t" ]]; then
+        ln -sfn "$THEME_SRC/config/omarchy/themes/$t" "$USER_HOME/.config/omarchy/themes/$t"
+    fi
+done
 
 # 3. Enlaces del tema GTK Darky
 mkdir -p "$USER_HOME/.local/share/themes"

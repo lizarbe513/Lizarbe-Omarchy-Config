@@ -232,12 +232,17 @@ class SystemManager:
 
     def _fetch_repo_versions(self) -> Dict[str, str]:
         """Versiones publicadas en el repositorio de Lizarbe (lee lizarbe.db en línea)."""
-        import io
-        import tarfile
         import urllib.request
 
         with urllib.request.urlopen(self.REPO_DB_URL, timeout=5) as r:
-            data = r.read()
+            return self.parse_repo_db(r.read())
+
+    @staticmethod
+    def parse_repo_db(data: bytes) -> Dict[str, str]:
+        """{paquete: versión} de una base de datos de pacman (`lizarbe.db`)."""
+        import io
+        import tarfile
+
         out: Dict[str, str] = {}
         with tarfile.open(fileobj=io.BytesIO(data)) as tf:
             for name in tf.getnames():

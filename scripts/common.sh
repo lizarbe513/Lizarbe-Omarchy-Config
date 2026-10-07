@@ -55,7 +55,7 @@ check_aur_helper() {
     if [[ $EUID -eq 0 ]]; then
         local real_user="${SUDO_USER:-${OMARCHY_INSTALL_USER:-}}"
         if [[ -z "$real_user" || "$real_user" == "root" ]]; then
-            real_user=$(awk -F: '$3 >= 1000 && $3 < 65000 {print $1; exit}' /etc/passwd 2>/dev/null || true)
+            real_user=$(awk -F: '$3 >= 1000 && $3 < 60000 {print $1; exit}' /etc/passwd 2>/dev/null || true)
         fi
         if [[ -n "$real_user" && "$real_user" != "root" ]]; then
             AUR_HELPER="sudo -u $real_user yay -S --needed --noconfirm"

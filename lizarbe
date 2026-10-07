@@ -118,7 +118,7 @@ show_help() {
     echo -e "  ${CYAN}(sin argumentos)${NC} / ${CYAN}tui${NC}  Abre la interfaz interactiva TUI de Lizarbe"
     echo -e "  ${CYAN}update${NC}                  Actualiza el sistema y Lizarbe (omarchy update)"
     echo -e "  ${CYAN}uninstall${NC} (o ${CYAN}unistall${NC}) Desinstala componentes del tema o suites de software"
-    echo -e "                          Opciones: --all, --apps-only, --help"
+    echo -e "                          Opciones: --all, --apps-only, --theme-only, --help"
     echo -e "  ${CYAN}apply${NC}                   Aplica configuraciones, dotfiles, iconos y recarga el tema"
     echo -e "  ${CYAN}status${NC}                  Muestra las versiones de los paquetes de Lizarbe"
     echo -e "  ${CYAN}install${NC}                 Ejecuta el asistente de instalación de Lizarbe"
