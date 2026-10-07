@@ -10,19 +10,20 @@ import argparse
 from lizarbe_tui import __version__
 from lizarbe_tui.ui.loader import StartupLoader
 from lizarbe_tui.ui.tui import LizarbeTUI
+from lizarbe_tui.i18n import tr, trf
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="lizarbe-tui",
-        description="Lizarbe Theme & Suite — Panel TUI interactivo para Omarchy & Hyprland",
+        description=tr("Lizarbe Theme & Suite — Panel TUI interactivo para Omarchy & Hyprland"),
     )
     parser.add_argument("-v", "--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument(
         "--section",
         type=str,
         default="",
-        help="Sección inicial al abrir la TUI (theme, dotfiles, status, suites, apps_creative, apps_work, uninstall)",
+        help=tr("Sección inicial al abrir la TUI (theme, dotfiles, status, suites, apps_creative, apps_work, uninstall)"),
     )
     return parser.parse_args()
 

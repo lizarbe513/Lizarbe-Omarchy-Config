@@ -11,6 +11,7 @@ import subprocess
 import time
 from pathlib import Path
 from typing import Dict, Any, List, Set, Tuple, Optional
+from lizarbe_tui.i18n import tr, trf
 
 
 class SystemManager:
@@ -18,59 +19,59 @@ class SystemManager:
 
     # Definición de las 7 suites modulares de Lizarbe
     SUITES_SPEC: List[Tuple[str, str, str, str, str]] = [
-        ("core", "Base & Tema Lizarbe", "Tema, Iconos, GTK Darky, Zen, Fastfetch", "pkgs-core.txt", "install-core.sh"),
-        ("2d", "Suite Creativa 2D", "Krita, LibreSprite, Inkscape, Pinta", "pkgs-2d.txt", "install-2d.sh"),
-        ("3d", "Suite Creativa 3D & CAD", "Blender, FreeCAD, Godot, Blockbench", "pkgs-3d.txt", "install-3d.sh"),
-        ("dev", "Suite de Desarrollo", "VS Code, Git, Lazygit, Docker, Lazydocker", "pkgs-dev.txt", "install-dev.sh"),
-        ("office", "Suite Ofimatica & Notas", "genOffice, ONLYOFFICE, LibreOffice, Obsidian", "pkgs-office.txt", "install-office.sh"),
-        ("multimedia", "Suite Multimedia", "Kdenlive, Shotcut, OBS Studio, Audacity", "pkgs-multimedia.txt", "install-multimedia.sh"),
-        ("webapps", "Webapps Omarchy", "WhatsApp Web y YouTube", "", "install-webapps.sh"),
+        ("core", tr("Base & Tema Lizarbe"), tr("Tema, Iconos, GTK Darky, Zen, Fastfetch"), "pkgs-core.txt", "install-core.sh"),
+        ("2d", tr("Suite Creativa 2D"), "Krita, LibreSprite, Inkscape, Pinta", "pkgs-2d.txt", "install-2d.sh"),
+        ("3d", tr("Suite Creativa 3D & CAD"), tr("Blender, FreeCAD, Godot, Blockbench"), "pkgs-3d.txt", "install-3d.sh"),
+        ("dev", tr("Suite de Desarrollo"), "VS Code, Git, Lazygit, Docker, Lazydocker", "pkgs-dev.txt", "install-dev.sh"),
+        ("office", tr("Suite Ofimatica & Notas"), "genOffice, ONLYOFFICE, LibreOffice, Obsidian", "pkgs-office.txt", "install-office.sh"),
+        ("multimedia", tr("Suite Multimedia"), "Kdenlive, Shotcut, OBS Studio, Audacity", "pkgs-multimedia.txt", "install-multimedia.sh"),
+        ("webapps", tr("Webapps Omarchy"), tr("WhatsApp Web y YouTube"), "", "install-webapps.sh"),
     ]
 
     # Catálogo detallado de paquetes creativos (Sección Apps Creativas)
     CREATIVE_PKGS: List[Tuple[str, str, str, str]] = [
         # (categoria, pkg_name, nombre_visible, descripcion)
-        ("SUITE CREATIVA 2D", "krita", "Krita", "Pintura digital e ilustracion"),
-        ("SUITE CREATIVA 2D", "libresprite", "LibreSprite", "Animacion y pixel art"),
-        ("SUITE CREATIVA 2D", "inkscape", "Inkscape", "Diseño y graficos vectoriales"),
-        ("SUITE CREATIVA 2D", "pinta", "Pinta", "Retoque rapido de imagen"),
-        ("SUITE CREATIVA 3D & CAD", "blender", "Blender", "Modelado 3D, escultura y render"),
-        ("SUITE CREATIVA 3D & CAD", "freecad", "FreeCAD", "Diseño parametrico 3D y CAD"),
-        ("SUITE CREATIVA 3D & CAD", "godot", "Godot Engine", "Motor de videojuegos 2D y 3D"),
-        ("SUITE CREATIVA 3D & CAD", "blockbench-bin", "Blockbench", "Modelado 3D low-poly y voxeles"),
-        ("SUITE MULTIMEDIA", "kdenlive", "Kdenlive", "Edicion de video multipista"),
-        ("SUITE MULTIMEDIA", "shotcut", "Shotcut", "Editor de video rapido y ligero"),
-        ("SUITE MULTIMEDIA", "obs-studio", "OBS Studio", "Grabacion y streaming"),
-        ("SUITE MULTIMEDIA", "audacity", "Audacity", "Edicion de audio multipista"),
+        (tr("SUITE CREATIVA 2D"), "krita", "Krita", tr("Pintura digital e ilustracion")),
+        (tr("SUITE CREATIVA 2D"), "libresprite", "LibreSprite", tr("Animacion y pixel art")),
+        (tr("SUITE CREATIVA 2D"), "inkscape", "Inkscape", tr("Diseño y graficos vectoriales")),
+        (tr("SUITE CREATIVA 2D"), "pinta", "Pinta", tr("Retoque rapido de imagen")),
+        (tr("SUITE CREATIVA 3D & CAD"), "blender", "Blender", tr("Modelado 3D, escultura y render")),
+        (tr("SUITE CREATIVA 3D & CAD"), "freecad", "FreeCAD", tr("Diseño parametrico 3D y CAD")),
+        (tr("SUITE CREATIVA 3D & CAD"), "godot", "Godot Engine", tr("Motor de videojuegos 2D y 3D")),
+        (tr("SUITE CREATIVA 3D & CAD"), "blockbench-bin", "Blockbench", tr("Modelado 3D low-poly y voxeles")),
+        (tr("SUITE MULTIMEDIA"), "kdenlive", "Kdenlive", tr("Edicion de video multipista")),
+        (tr("SUITE MULTIMEDIA"), "shotcut", "Shotcut", tr("Editor de video rapido y ligero")),
+        (tr("SUITE MULTIMEDIA"), "obs-studio", "OBS Studio", tr("Grabacion y streaming")),
+        (tr("SUITE MULTIMEDIA"), "audacity", "Audacity", tr("Edicion de audio multipista")),
     ]
 
     # Catálogo detallado de paquetes de desarrollo, ofimática y base (Sección Apps Dev y Office)
     WORK_PKGS: List[Tuple[str, str, str, str]] = [
-        ("DESARROLLO & CODIGO", "visual-studio-code-bin", "Visual Studio Code", "Editor de codigo principal"),
-        ("DESARROLLO & CODIGO", "git", "Git", "Control de versiones distribuido"),
-        ("DESARROLLO & CODIGO", "lazygit", "Lazygit", "Cliente Git TUI interactivo"),
-        ("DESARROLLO & CODIGO", "docker", "Docker", "Motor de contenedores"),
-        ("DESARROLLO & CODIGO", "docker-compose", "Docker Compose", "Orquestacion multicontenedor"),
-        ("DESARROLLO & CODIGO", "lazydocker", "Lazydocker", "Panel TUI para contenedores Docker"),
-        ("OFIMATICA & NOTAS", "genoffice-bin", "genOffice", "Suite ofimatica moderna con IA"),
-        ("OFIMATICA & NOTAS", "onlyoffice-bin", "ONLYOFFICE Desktop", "Documentos, hojas y presentaciones"),
-        ("OFIMATICA & NOTAS", "libreoffice-fresh", "LibreOffice", "Suite ofimatica offline"),
-        ("OFIMATICA & NOTAS", "obsidian", "Obsidian", "Notas y proyectos en Markdown"),
-        ("OFIMATICA & NOTAS", "xournalpp", "Xournal++", "Notas manuscritas y PDF"),
+        (tr("DESARROLLO & CODIGO"), "visual-studio-code-bin", "Visual Studio Code", tr("Editor de codigo principal")),
+        (tr("DESARROLLO & CODIGO"), "git", "Git", tr("Control de versiones distribuido")),
+        (tr("DESARROLLO & CODIGO"), "lazygit", "Lazygit", tr("Cliente Git TUI interactivo")),
+        (tr("DESARROLLO & CODIGO"), "docker", "Docker", tr("Motor de contenedores")),
+        (tr("DESARROLLO & CODIGO"), "docker-compose", "Docker Compose", tr("Orquestacion multicontenedor")),
+        (tr("DESARROLLO & CODIGO"), "lazydocker", "Lazydocker", tr("Panel TUI para contenedores Docker")),
+        (tr("OFIMATICA & NOTAS"), "genoffice-bin", "genOffice", tr("Suite ofimatica moderna con IA")),
+        (tr("OFIMATICA & NOTAS"), "onlyoffice-bin", "ONLYOFFICE Desktop", tr("Documentos, hojas y presentaciones")),
+        (tr("OFIMATICA & NOTAS"), "libreoffice-fresh", "LibreOffice", tr("Suite ofimatica offline")),
+        (tr("OFIMATICA & NOTAS"), "obsidian", "Obsidian", tr("Notas y proyectos en Markdown")),
+        (tr("OFIMATICA & NOTAS"), "xournalpp", "Xournal++", tr("Notas manuscritas y PDF")),
     ]
 
     # Catálogo detallado de utilidades y herramientas (Sección Utilidades)
     UTIL_PKGS: List[Tuple[str, str, str, str]] = [
-        ("NAVEGACION & WEB", "zen-browser-bin", "Zen Browser", "Navegador web moderno, enfocado en rendimiento y privacidad"),
-        ("PERSONALIZACION & GTK", "nwg-look", "nwg-look", "Gestor y configurador visual de temas GTK e iconos"),
-        ("TERMINAL & INFO", "fastfetch", "Fastfetch", "Información del sistema con logo ASCII Lizarbe oficial"),
-        ("MONITOREO DEL SISTEMA", "htop", "htop", "Monitor interactivo de procesos y consumo de CPU/RAM"),
-        ("MONITOREO DEL SISTEMA", "btop", "btop", "Monitor de recursos con interfaz gráfica moderna y sensores"),
-        ("TERMINALES", "alacritty", "Alacritty", "Emulador de terminal acelerado por GPU y ultrarrápido"),
-        ("TERMINALES", "ghostty", "Ghostty", "Terminal nativa Wayland moderna con fuentes enriquecidas"),
-        ("TRANSFERENCIA & RED", "localsend-bin", "LocalSend", "Compartir archivos y fotos en red local sin internet"),
-        ("LIMPIEZA & ESPACIO", "bleachbit", "BleachBit", "Limpiador de archivos temporales, caché y espacio libre"),
-        ("APARIENCIA COMPLEMENTARIA", "yaru-icon-theme", "Yaru Icons", "Paquete de iconos complementarios de alta compatibilidad"),
+        (tr("NAVEGACION & WEB"), "zen-browser-bin", "Zen Browser", tr("Navegador web moderno, enfocado en rendimiento y privacidad")),
+        (tr("PERSONALIZACION & GTK"), "nwg-look", "nwg-look", tr("Gestor y configurador visual de temas GTK e iconos")),
+        (tr("TERMINAL & INFO"), "fastfetch", "Fastfetch", tr("Información del sistema con logo ASCII Lizarbe oficial")),
+        (tr("MONITOREO DEL SISTEMA"), "htop", "htop", tr("Monitor interactivo de procesos y consumo de CPU/RAM")),
+        (tr("MONITOREO DEL SISTEMA"), "btop", "btop", tr("Monitor de recursos con interfaz gráfica moderna y sensores")),
+        (tr("TERMINALES"), "alacritty", "Alacritty", tr("Emulador de terminal acelerado por GPU y ultrarrápido")),
+        (tr("TERMINALES"), "ghostty", "Ghostty", tr("Terminal nativa Wayland moderna con fuentes enriquecidas")),
+        (tr("TRANSFERENCIA & RED"), "localsend-bin", "LocalSend", tr("Compartir archivos y fotos en red local sin internet")),
+        (tr("LIMPIEZA & ESPACIO"), "bleachbit", "BleachBit", tr("Limpiador de archivos temporales, caché y espacio libre")),
+        (tr("APARIENCIA COMPLEMENTARIA"), "yaru-icon-theme", "Yaru Icons", tr("Paquete de iconos complementarios de alta compatibilidad")),
     ]
 
     WEBAPPS_SPEC: List[Tuple[str, str, str, str]] = [
@@ -82,8 +83,8 @@ class SystemManager:
     def __init__(self, repo_dir: Optional[Path] = None):
         self.repo_dir = self._resolve_repo_dir(repo_dir)
         self.installed_pkgs: Set[str] = set()
-        self.remote_hash_cache: str = "Pulsa Comprobar"
-        self.sync_state_cache: str = "Verificacion bajo demanda"
+        self.remote_hash_cache: str = tr("Pulsa Comprobar")
+        self.sync_state_cache: str = tr("Verificacion bajo demanda")
         self._kdeconnect_devices_cache: List[Dict[str, Any]] = []
         self._kdeconnect_last_check: float = 0.0
         self.ensure_desktop_entry()
@@ -227,7 +228,7 @@ class SystemManager:
                 return res.stdout.split()[1]
         except Exception:
             pass
-        return "sin paquete"
+        return tr("sin paquete")
 
     def _fetch_repo_versions(self) -> Dict[str, str]:
         """Versiones publicadas en el repositorio de Lizarbe (lee lizarbe.db en línea)."""
@@ -258,14 +259,14 @@ class SystemManager:
             pending = [n for n, v in installed.items() if v != published[n]]
             self.remote_hash_cache = published.get("lizarbe", "?")
             if pending:
-                self.sync_state_cache = "Update disponible (" + ", ".join(sorted(pending)) + ")"
+                self.sync_state_cache = trf("Update disponible ({names})", names=", ".join(sorted(pending)))
             else:
-                self.sync_state_cache = f"Al dia ({self.remote_hash_cache})"
+                self.sync_state_cache = trf("Al dia ({remote_hash_cache})", remote_hash_cache=self.remote_hash_cache)
             return True, self.remote_hash_cache, self.sync_state_cache
         except Exception:
             pass
-        self.remote_hash_cache = "Sin conexion"
-        self.sync_state_cache = "Sin conexion al repositorio de Lizarbe"
+        self.remote_hash_cache = tr("Sin conexion")
+        self.sync_state_cache = tr("Sin conexion al repositorio de Lizarbe")
         return False, self.remote_hash_cache, self.sync_state_cache
 
     def load_settings_dict(self, current_theme: str, current_wallpaper: str) -> Dict[str, Any]:

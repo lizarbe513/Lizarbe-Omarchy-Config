@@ -20,6 +20,14 @@ from typing import List, Dict, Any, Optional, Tuple
 from lizarbe_tui.core.theme_engine import ThemeEngine
 from lizarbe_tui.core.hypr_ipc import HyprIPC
 from lizarbe_tui.core.system_manager import SystemManager
+from lizarbe_tui.i18n import tr, trf
+
+
+
+def _label_has(label: str, *keys: str) -> bool:
+    """¿El texto contiene alguna de las palabras (en español o ya traducidas)?"""
+    low = label.lower()
+    return any(k.lower() in low or tr(k).lower() in low for k in keys)
 
 
 class SectionItem:
@@ -42,7 +50,7 @@ class SectionItem:
         self.desc = desc
         self.item_type = item_type
         self.options = options or []
-        self.action_label = action_label
+        self.action_label = tr(action_label) if action_label == " Ejecutar " else action_label
         self.is_installed = is_installed
         self.pkg_name = pkg_name
         self.category = category
@@ -56,15 +64,15 @@ class LizarbeTUI:
     """
 
     SECTIONS = [
-        ("SISTEMA LIZARBE", "status", "󰚰", "Actualizaciones", "Monitor del equipo y parches oficiales"),
-        ("SISTEMA LIZARBE", "theme", "󰏘", "Iconos y GTK", "Iconos Lizarbe-Red y tema Darky"),
-        ("SISTEMA LIZARBE", "dotfiles", "", "Personalizacion", "Fastfetch, Starship y branding"),
-        ("SOFTWARE Y APPS", "apps_util", "󰣆", "Utilidades", "Zen Browser, monitores y herramientas"),
-        ("SOFTWARE Y APPS", "kdeconnect", "󰄡", "KDE Connect", "Vincular y sincronizar con tu smartphone"),
-        ("SOFTWARE Y APPS", "apps_creative", "", "Apps Creativas", "Ilustracion 2D, 3D, CAD y Video"),
-        ("SOFTWARE Y APPS", "apps_work", "", "Apps Dev y Office", "Desarrollo, Ofimatica y Webapps"),
-        ("SOFTWARE Y APPS", "suites", "󰏖", "Suites Lizarbe", "Instalacion modular por suites"),
-        ("MANTENIMIENTO", "uninstall", "󰆴", "Desinstalacion", "Revertir tema o remover componentes"),
+        (tr("SISTEMA LIZARBE"), "status", "󰚰", tr("Actualizaciones"), tr("Monitor del equipo y parches oficiales")),
+        (tr("SISTEMA LIZARBE"), "theme", "󰏘", tr("Iconos y GTK"), tr("Iconos Lizarbe-Red y tema Darky")),
+        (tr("SISTEMA LIZARBE"), "dotfiles", "", tr("Personalizacion"), tr("Fastfetch, Starship y branding")),
+        (tr("SOFTWARE Y APPS"), "apps_util", "󰣆", tr("Utilidades"), tr("Zen Browser, monitores y herramientas")),
+        (tr("SOFTWARE Y APPS"), "kdeconnect", "󰄡", "KDE Connect", tr("Vincular y sincronizar con tu smartphone")),
+        (tr("SOFTWARE Y APPS"), "apps_creative", "", tr("Apps Creativas"), tr("Ilustracion 2D, 3D, CAD y Video")),
+        (tr("SOFTWARE Y APPS"), "apps_work", "", tr("Apps Dev y Office"), tr("Desarrollo, Ofimatica y Webapps")),
+        (tr("SOFTWARE Y APPS"), "suites", "󰏖", tr("Suites Lizarbe"), tr("Instalacion modular por suites")),
+        (tr("MANTENIMIENTO"), "uninstall", "󰆴", tr("Desinstalacion"), tr("Revertir tema o remover componentes")),
     ]
 
     def __init__(self, was_tiled: Optional[bool] = None):
@@ -83,7 +91,7 @@ class LizarbeTUI:
         self.current_section_idx = 0
         self.selected_item_idx = 0
         self.content_scroll_offset = 0
-        self.status_message = "Listo."
+        self.status_message = tr("Listo.")
 
         # Datos cargados del sistema
         self.available_themes = self.theme_engine.list_available_themes()
@@ -171,35 +179,35 @@ class LizarbeTUI:
         return [
             SectionItem(
                 "header:theme_controls",
-                "ICONOS Y GTK",
-                "Para cambiar de tema o fondo usa Menu > Style en Omarchy",
+                tr("ICONOS Y GTK"),
+                tr("Para cambiar de tema o fondo usa Menú > Apariencia en Omarchy"),
                 "header",
             ),
             SectionItem(
                 "icons_lizarbe",
-                "Iconos Lizarbe-Red",
-                "Pack de iconos y carpeta Projects",
+                tr("Iconos Lizarbe-Red"),
+                tr("Pack de iconos y carpeta Projects"),
                 "toggle",
             ),
             SectionItem(
                 "gtk_darky",
-                "Tema GTK Darky",
-                "Enlazar tema Darky en el usuario",
+                tr("Tema GTK Darky"),
+                tr("Enlazar tema Darky en el usuario"),
                 "toggle",
             ),
             SectionItem(
                 "action:open_nwg_look",
-                "Abrir nwg-look",
-                "Configurador visual de temas GTK",
+                tr("Abrir nwg-look"),
+                tr("Configurador visual de temas GTK"),
                 "action",
-                action_label=" Abrir ",
+                action_label=tr(" Abrir "),
             ),
             SectionItem(
                 "action:apply_user_now",
-                "Reaplicar tema completo",
-                "Ejecutar lizarbe-apply-user ahora",
+                tr("Reaplicar tema completo"),
+                tr("Ejecutar lizarbe-apply-user ahora"),
                 "action",
-                action_label=" Reaplicar ",
+                action_label=tr(" Reaplicar "),
             ),
         ]
 
@@ -207,47 +215,47 @@ class LizarbeTUI:
         return [
             SectionItem(
                 "header:dotfiles_toggles",
-                "DOTFILES Y PERSONALIZACION",
-                "Activa o desactiva componentes y pulsa Aplicar",
+                tr("DOTFILES Y PERSONALIZACION"),
+                tr("Activa o desactiva componentes y pulsa Aplicar"),
                 "header",
             ),
             SectionItem(
                 "fastfetch",
-                "Fastfetch Lizarbe",
-                "Logo ASCII personalizado y config.jsonc",
+                tr("Fastfetch Lizarbe"),
+                tr("Logo ASCII personalizado y config.jsonc"),
                 "toggle",
             ),
             SectionItem(
                 "starship",
-                "Prompt Starship",
-                "Estilo limpio en ~/.config/starship.toml",
+                tr("Prompt Starship"),
+                tr("Estilo limpio en ~/.config/starship.toml"),
                 "toggle",
             ),
             SectionItem(
                 "branding",
-                "Branding Omarchy",
-                "Logo, about y salvapantallas Lizarbe",
+                tr("Branding Omarchy"),
+                tr("Logo, about y salvapantallas Lizarbe"),
                 "toggle",
             ),
             SectionItem(
                 "header:dotfiles_actions",
-                "ACCIONES RAPIDAS DEL ENTORNO",
-                "Aplicacion directa de utilidades del sistema",
+                tr("ACCIONES RAPIDAS DEL ENTORNO"),
+                tr("Aplicacion directa de utilidades del sistema"),
                 "header",
             ),
             SectionItem(
                 "action:set_zen_default",
-                "Zen Browser predeterminado",
-                "Establecer Zen como navegador del sistema",
+                tr("Zen Browser predeterminado"),
+                tr("Establecer Zen como navegador del sistema"),
                 "action",
-                action_label=" Configurar ",
+                action_label=tr(" Configurar "),
             ),
             SectionItem(
                 "action:restart_shell",
-                "Reiniciar Barra Superior",
-                "Recargar Quickshell (omarchy-restart-shell)",
+                tr("Reiniciar Barra Superior"),
+                tr("Recargar Quickshell (omarchy-restart-shell)"),
                 "action",
-                action_label=" Reiniciar ",
+                action_label=tr(" Reiniciar "),
             ),
         ]
 
@@ -256,34 +264,35 @@ class LizarbeTUI:
         rem_hash = self.sys_mgr.remote_hash_cache
         sync_txt = self.sys_mgr.sync_state_cache
 
-        is_checked = bool(rem_hash and rem_hash not in ("Pulsa Comprobar", "Sin conexion", "Verificacion bajo demanda"))
-        is_up_to_date = (local_hash == rem_hash) if is_checked else ("al dia" in sync_txt.lower())
+        pending_states = (tr("Pulsa Comprobar"), tr("Sin conexion"), "Verificacion bajo demanda")
+        is_checked = bool(rem_hash and rem_hash not in pending_states and rem_hash not in [tr(x) for x in pending_states])
+        is_up_to_date = (local_hash == rem_hash) if is_checked else _label_has(sync_txt, "Al dia")
 
         if is_checked and is_up_to_date:
-            banner_title = "TU EQUIPO LIZARBE ESTA AL DIA"
-            banner_desc = f"Version oficial ({local_hash}) activa. No hay parches pendientes."
+            banner_title = tr("TU EQUIPO LIZARBE ESTA AL DIA")
+            banner_desc = trf("Version oficial ({local_hash}) activa. No hay parches pendientes.", local_hash=local_hash)
             banner_action = "action:check_remote"
-            banner_btn = " Comprobar "
+            banner_btn = tr(" Comprobar ")
         elif is_checked and not is_up_to_date:
-            banner_title = "ACTUALIZACION DISPONIBLE PARA TU EQUIPO"
-            banner_desc = f"Nuevos parches en el servidor ({local_hash} -> {rem_hash}). Pulsa Actualizar."
+            banner_title = tr("ACTUALIZACION DISPONIBLE PARA TU EQUIPO")
+            banner_desc = trf("Nuevos parches en el servidor ({local_hash} -> {rem_hash}). Pulsa Actualizar.", local_hash=local_hash, rem_hash=rem_hash)
             banner_action = "action:update_github"
-            banner_btn = " Actualizar "
+            banner_btn = tr(" Actualizar ")
         else:
-            banner_title = "MONITOR DE ACTUALIZACIONES LIZARBE OS"
-            banner_desc = f"Estado: {sync_txt}. Pulsa 'Buscar Actualizaciones' para consultar GitHub."
+            banner_title = tr("MONITOR DE ACTUALIZACIONES LIZARBE OS")
+            banner_desc = trf("Estado: {sync_txt}. Pulsa 'Buscar Actualizaciones' para consultar GitHub.", sync_txt=sync_txt)
             banner_action = "action:check_remote"
-            banner_btn = " Comprobar "
+            banner_btn = tr(" Comprobar ")
 
-        root_theme = "Instalado" if Path("/usr/share/omarchy/themes/lizarbe").exists() else "No instalado"
-        root_icons = "Instalados" if Path("/usr/share/icons/Lizarbe-Red").exists() else "No encontrados"
-        root_darky = "Instalado" if Path("/usr/share/themes/Darky").exists() else "No encontrado"
+        root_theme = tr("Instalado") if Path("/usr/share/omarchy/themes/lizarbe").exists() else tr("No instalado")
+        root_icons = tr("Instalados") if Path("/usr/share/icons/Lizarbe-Red").exists() else tr("No encontrados")
+        root_darky = tr("Instalado") if Path("/usr/share/themes/Darky").exists() else tr("No encontrado")
 
         return [
             SectionItem(
                 "header:update_banner",
-                "ESTADO GENERAL DE ACTUALIZACION",
-                "Monitor oficial para usuarios de computadoras Lizarbe",
+                tr("ESTADO GENERAL DE ACTUALIZACION"),
+                tr("Monitor oficial para usuarios de computadoras Lizarbe"),
                 "header",
             ),
             SectionItem(
@@ -295,62 +304,62 @@ class LizarbeTUI:
             ),
             SectionItem(
                 "header:update_actions",
-                "ACCIONES DE MANTENIMIENTO DEL EQUIPO",
-                "Sincronizar y reparar componentes oficiales",
+                tr("ACCIONES DE MANTENIMIENTO DEL EQUIPO"),
+                tr("Sincronizar y reparar componentes oficiales"),
                 "header",
             ),
             SectionItem(
                 "action:update_github",
-                "Actualizar sistema (omarchy update)",
-                "Actualiza Omarchy y todos los paquetes de Lizarbe",
+                tr("Actualizar sistema (omarchy update)"),
+                tr("Actualiza Omarchy y todos los paquetes de Lizarbe"),
                 "action",
-                action_label=" Actualizar ",
+                action_label=tr(" Actualizar "),
             ),
             SectionItem(
                 "action:check_remote",
-                "Buscar Actualizaciones Ahora",
-                f"Repositorio: {self.sys_mgr.OFFICIAL_REPO_URL}",
+                tr("Buscar Actualizaciones Ahora"),
+                trf("Repositorio: {OFFICIAL_REPO_URL}", OFFICIAL_REPO_URL=self.sys_mgr.OFFICIAL_REPO_URL),
                 "action",
-                action_label=" Comprobar ",
+                action_label=tr(" Comprobar "),
             ),
             SectionItem(
                 "action:update_force",
-                "Reparar integración de Lizarbe",
-                "Revisa el menú, reglas de ventana y archivos de Lizarbe y los arregla",
+                tr("Reparar integración de Lizarbe"),
+                tr("Revisa el menú, reglas de ventana y archivos de Lizarbe y los arregla"),
                 "action",
-                action_label=" Reparar ",
+                action_label=tr(" Reparar "),
             ),
             SectionItem(
                 "header:system_info",
-                "COMPONENTES OFICIALES MONITOREADOS",
-                f"Equipo Lizarbe • Repositorio: {self.sys_mgr.repo_dir.name}",
+                tr("COMPONENTES OFICIALES MONITOREADOS"),
+                trf("Equipo Lizarbe • Repositorio: {name}", name=self.sys_mgr.repo_dir.name),
                 "header",
             ),
             SectionItem(
                 "info:local_version",
-                "Versión local instalada",
-                f"Commit activo de la máquina: {local_hash}",
+                tr("Versión local instalada"),
+                trf("Versión del paquete en esta máquina: {local_hash}", local_hash=local_hash),
                 "info_badge",
                 action_label=f" {local_hash} ",
             ),
             SectionItem(
                 "info:root_theme",
-                "Temas en /usr/share/omarchy",
-                "Lizarbe Dark y Lizarbe Light globales",
+                tr("Temas en /usr/share/omarchy"),
+                tr("Lizarbe Dark y Lizarbe Light globales"),
                 "info_badge",
                 action_label=f" {root_theme} ",
             ),
             SectionItem(
                 "info:root_icons",
-                "Iconos en /usr/share/icons",
-                "Paquete global Lizarbe-Red",
+                tr("Iconos en /usr/share/icons"),
+                tr("Paquete global Lizarbe-Red"),
                 "info_badge",
                 action_label=f" {root_icons} ",
             ),
             SectionItem(
                 "info:root_darky",
-                "Tema GTK Darky en /usr/share",
-                "Tema GTK3/GTK4 en la raíz del sistema",
+                tr("Tema GTK Darky en /usr/share"),
+                tr("Tema GTK3/GTK4 en la raíz del sistema"),
                 "info_badge",
                 action_label=f" {root_darky} ",
             ),
@@ -360,8 +369,8 @@ class LizarbeTUI:
         items: List[SectionItem] = [
             SectionItem(
                 "header:suites_modular",
-                "SELECCION DE SUITES DE SOFTWARE",
-                "Marca las suites deseadas y pulsa Aplicar (Clic der: Accion directa)",
+                tr("SELECCION DE SUITES DE SOFTWARE"),
+                tr("Marca las suites deseadas y pulsa Aplicar (Clic der: Accion directa)"),
                 "header",
             ),
         ]
@@ -380,30 +389,30 @@ class LizarbeTUI:
         items.extend([
             SectionItem(
                 "header:suites_presets",
-                "PERFILES DE INSTALACION RAPIDA (INSTALL.SH)",
-                "Ejecucion guiada de perfiles completos de instalacion",
+                tr("PERFILES DE INSTALACION RAPIDA (INSTALL.SH)"),
+                tr("Ejecucion guiada de perfiles completos de instalacion"),
                 "header",
             ),
             SectionItem(
                 "action:install_all",
-                "Instalar Todo (--all)",
-                "Base + todas las suites (incluye 3D & CAD)",
+                tr("Instalar Todo (--all)"),
+                tr("Base + todas las suites (incluye 3D & CAD)"),
                 "action",
-                action_label=" Instalar Todo ",
+                action_label=tr(" Instalar Todo "),
             ),
             SectionItem(
                 "action:install_no_3d",
-                "Instalar sin 3D (--no-3d)",
-                "Recomendado para portatiles / sin GPU dedicada",
+                tr("Instalar sin 3D (--no-3d)"),
+                tr("Recomendado para portatiles / sin GPU dedicada"),
                 "action",
-                action_label=" Instalar s/3D ",
+                action_label=tr(" Instalar s/3D "),
             ),
             SectionItem(
                 "action:install_core_only",
-                "Solo Base y Tema (--core-only)",
-                "Unicamente tema Lizarbe, iconos, GTK y dotfiles",
+                tr("Solo Base y Tema (--core-only)"),
+                tr("Unicamente tema Lizarbe, iconos, GTK y dotfiles"),
                 "action",
-                action_label=" Solo Base ",
+                action_label=tr(" Solo Base "),
             ),
         ])
         return items
@@ -438,11 +447,11 @@ class LizarbeTUI:
                 item = SectionItem(
                     f"webapp:{w_id}",
                     w_title,
-                    f"Webapp de {w_id} ({w_url})",
+                    trf("Webapp de {w_id} ({w_url})", w_id=w_id, w_url=w_url),
                     "app_card",
                     is_installed=is_inst,
                     pkg_name=w_id,
-                    category="WEBAPPS",
+                    category=tr("WEBAPPS"),
                 )
                 if is_inst:
                     installed.append(item)
@@ -455,8 +464,8 @@ class LizarbeTUI:
         items.append(
             SectionItem(
                 "header:avail",
-                "DISPONIBLES PARA INSTALAR",
-                f"({len(uninstalled)} aplicaciones listas para instalar en tu equipo)",
+                tr("DISPONIBLES PARA INSTALAR"),
+                trf("({len} aplicaciones listas para instalar en tu equipo)", len=len(uninstalled)),
                 "header",
             )
         )
@@ -466,10 +475,10 @@ class LizarbeTUI:
             items.append(
                 SectionItem(
                     "info:all_installed",
-                    "Todas las aplicaciones instaladas",
-                    "¡Tu equipo ya cuenta con todas las aplicaciones de esta sección!",
+                    tr("Todas las aplicaciones instaladas"),
+                    tr("¡Tu equipo ya cuenta con todas las aplicaciones de esta sección!"),
                     "info_badge",
-                    action_label=" [Al dia] ",
+                    action_label=tr(" [Al dia] "),
                 )
             )
 
@@ -477,8 +486,8 @@ class LizarbeTUI:
         items.append(
             SectionItem(
                 "header:installed",
-                "APLICACIONES INSTALADAS",
-                f"({len(installed)} aplicaciones activas en tu equipo)",
+                tr("APLICACIONES INSTALADAS"),
+                trf("({len} aplicaciones activas en tu equipo)", len=len(installed)),
                 "header",
             )
         )
@@ -488,10 +497,10 @@ class LizarbeTUI:
             items.append(
                 SectionItem(
                     "info:none_installed",
-                    "Ninguna instalada todavía",
-                    "Selecciona cualquiera de las aplicaciones de arriba para instalarla.",
+                    tr("Ninguna instalada todavía"),
+                    tr("Selecciona cualquiera de las aplicaciones de arriba para instalarla."),
                     "info_badge",
-                    action_label=" 0 instaladas ",
+                    action_label=tr(" 0 instaladas "),
                 )
             )
 
@@ -515,8 +524,8 @@ class LizarbeTUI:
         items.append(
             SectionItem(
                 "header:kc_service",
-                "ESTADO DEL SERVICIO KDE CONNECT",
-                "Demonio en segundo plano para recepción de datos y eventos",
+                tr("ESTADO DEL SERVICIO KDE CONNECT"),
+                tr("Demonio en segundo plano para recepción de datos y eventos"),
                 "header",
             )
         )
@@ -524,10 +533,10 @@ class LizarbeTUI:
             items.append(
                 SectionItem(
                     "action:kc_toggle_daemon",
-                    "Demonio KDE Connect",
-                    "Servicio activo y escuchando en la red local" if is_running else "Servicio inactivo o en espera",
+                    tr("Demonio KDE Connect"),
+                    tr("Servicio activo y escuchando en la red local") if is_running else tr("Servicio inactivo o en espera"),
                     "action",
-                    action_label=" Reiniciar " if is_running else " Iniciar ",
+                    action_label=tr(" Reiniciar ") if is_running else tr(" Iniciar "),
                     is_installed=False,
                 )
             )
@@ -535,10 +544,10 @@ class LizarbeTUI:
             items.append(
                 SectionItem(
                     "action:kc_toggle_daemon",
-                    "Demonio KDE Connect",
-                    "KDE Connect no está instalado en el equipo",
+                    tr("Demonio KDE Connect"),
+                    tr("KDE Connect no está instalado en el equipo"),
                     "action",
-                    action_label=" No Instalado ",
+                    action_label=tr(" No Instalado "),
                     is_installed=True,  # Opacada / atenuada
                 )
             )
@@ -547,8 +556,8 @@ class LizarbeTUI:
         items.append(
             SectionItem(
                 "header:kc_tools",
-                "HERRAMIENTAS Y CONTROL",
-                "Acciones de prueba, emparejamiento y gestión remota",
+                tr("HERRAMIENTAS Y CONTROL"),
+                tr("Acciones de prueba, emparejamiento y gestión remota"),
                 "header",
             )
         )
@@ -556,44 +565,44 @@ class LizarbeTUI:
             items.append(
                 SectionItem(
                     "action:kc_fix_firewall",
-                    "Cortafuegos: Puertos 1714-1764 Bloqueados",
-                    "UFW impide descubrir tu celular. Pulsa para desbloquearlos",
+                    tr("Cortafuegos: Puertos 1714-1764 Bloqueados"),
+                    tr("UFW impide descubrir tu celular. Pulsa para desbloquearlos"),
                     "action",
-                    action_label=" Abrir Puertos ",
+                    action_label=tr(" Abrir Puertos "),
                     is_installed=False,
                 )
             )
         items.extend([
             SectionItem(
                 "action:kc_how_to_use",
-                "Guía de Conexión y Uso",
-                "Instrucciones paso a paso y diagramas para vincular tu teléfono",
+                tr("Guía de Conexión y Uso"),
+                tr("Instrucciones paso a paso y diagramas para vincular tu teléfono"),
                 "action",
-                action_label=" Cómo Usar ",
+                action_label=tr(" Cómo Usar "),
                 is_installed=False,
             ),
             SectionItem(
                 "action:open_kdeconnect_gui",
-                "Abrir Gestor KDE Connect",
-                "Abrir interfaz gráfica completa para vincular dispositivos",
+                tr("Abrir Gestor KDE Connect"),
+                tr("Abrir interfaz gráfica completa para vincular dispositivos"),
                 "action",
-                action_label=" Abrir GUI ",
+                action_label=tr(" Abrir GUI "),
                 is_installed=(not is_inst),
             ),
             SectionItem(
                 "action:kc_ping_all",
-                "Probar Conexión (Ping a todos)",
-                "Enviar señal de prueba a los dispositivos vinculados",
+                tr("Probar Conexión (Ping a todos)"),
+                tr("Enviar señal de prueba a los dispositivos vinculados"),
                 "action",
-                action_label=" Enviar Ping ",
+                action_label=tr(" Enviar Ping "),
                 is_installed=(not is_inst),
             ),
             SectionItem(
                 "action:kc_ring",
-                "Hacer Sonar mi Teléfono",
-                "Envía una alarma acústica para encontrar tu teléfono móvil",
+                tr("Hacer Sonar mi Teléfono"),
+                tr("Envía una alarma acústica para encontrar tu teléfono móvil"),
                 "action",
-                action_label=" Hacer Sonar ",
+                action_label=tr(" Hacer Sonar "),
                 is_installed=(not is_inst),
             ),
         ])
@@ -602,8 +611,8 @@ class LizarbeTUI:
         items.append(
             SectionItem(
                 "header:kc_devices",
-                "DISPOSITIVOS DETECTADOS EN TU RED LOCAL (WIFI)",
-                "Smartphones con la app KDE Connect abierta en tu misma red",
+                tr("DISPOSITIVOS DETECTADOS EN TU RED LOCAL (WIFI)"),
+                tr("Smartphones con la app KDE Connect abierta en tu misma red"),
                 "header",
             )
         )
@@ -614,14 +623,14 @@ class LizarbeTUI:
                 d_id = dev["id"]
                 d_name = dev["name"]
                 paired = dev["paired"]
-                st_desc = "Vinculado y sincronizado" if paired else "Disponible para vincular"
+                st_desc = tr("Vinculado y sincronizado") if paired else tr("Disponible para vincular")
                 items.append(
                     SectionItem(
                         f"kc_device:{d_id}",
-                        f"Smartphone: {d_name}",
-                        f"ID: {d_id} • Estado: {st_desc}",
+                        trf("Smartphone: {d_name}", d_name=d_name),
+                        trf("ID: {d_id} • Estado: {st_desc}", d_id=d_id, st_desc=st_desc),
                         "action",
-                        action_label=" Vinculado " if paired else " Vincular ",
+                        action_label=tr(" Vinculado ") if paired else tr(" Vincular "),
                         is_installed=paired,
                     )
                 )
@@ -629,10 +638,10 @@ class LizarbeTUI:
             items.append(
                 SectionItem(
                     "action:kc_refresh_devices",
-                    "Buscar Teléfonos en la Red",
-                    "Asegúrate de tener la app KDE Connect abierta en tu teléfono" if is_inst else "Requiere instalar KDE Connect para buscar en tu red",
+                    tr("Buscar Teléfonos en la Red"),
+                    tr("Asegúrate de tener la app KDE Connect abierta en tu teléfono") if is_inst else tr("Requiere instalar KDE Connect para buscar en tu red"),
                     "action",
-                    action_label=" Actualizar ",
+                    action_label=tr(" Actualizar "),
                     is_installed=(not is_inst),
                 )
             )
@@ -641,8 +650,8 @@ class LizarbeTUI:
         items.append(
             SectionItem(
                 "header:kc_manage",
-                "GESTION DEL PAQUETE",
-                "Opciones de administración del software",
+                tr("GESTION DEL PAQUETE"),
+                tr("Opciones de administración del software"),
                 "header",
             )
         )
@@ -650,10 +659,10 @@ class LizarbeTUI:
             items.append(
                 SectionItem(
                     "action:uninstall_kdeconnect",
-                    "Desinstalar KDE Connect",
-                    "Remover paquete y servicio de KDE Connect del equipo",
+                    tr("Desinstalar KDE Connect"),
+                    tr("Remover paquete y servicio de KDE Connect del equipo"),
                     "action",
-                    action_label=" Desinstalar ",
+                    action_label=tr(" Desinstalar "),
                     is_installed=True,
                 )
             )
@@ -661,10 +670,10 @@ class LizarbeTUI:
             items.append(
                 SectionItem(
                     "action:install_kdeconnect_now",
-                    "Instalar KDE Connect",
-                    "Instalar paquete kdeconnect oficial desde repositorios de Arch",
+                    tr("Instalar KDE Connect"),
+                    tr("Instalar paquete kdeconnect oficial desde repositorios de Arch"),
                     "action",
-                    action_label="  Instalar ",
+                    action_label=tr("  Instalar "),
                     is_installed=False,
                 )
             )
@@ -675,78 +684,78 @@ class LizarbeTUI:
         return [
             SectionItem(
                 "header:uninstall_main",
-                "REVERSION Y DESINSTALACION GENERAL",
-                "Restaura el estado original de Omarchy con confirmacion",
+                tr("REVERSION Y DESINSTALACION GENERAL"),
+                tr("Restaura el estado original de Omarchy con confirmacion"),
                 "header",
             ),
             SectionItem(
                 "action:uninstall_theme_only",
-                "Desinstalar solo el Tema (--theme-only)",
-                "Remueve tema Lizarbe, iconos, Darky y restaura tema oficial",
+                tr("Desinstalar solo el Tema (--theme-only)"),
+                tr("Remueve tema Lizarbe, iconos, Darky y restaura tema oficial"),
                 "action",
-                action_label=" Revertir Tema ",
+                action_label=tr(" Revertir Tema "),
             ),
             SectionItem(
                 "action:uninstall_apps_only",
-                "Desinstalar todas las Suites (--apps-only)",
-                "Desinstala las aplicaciones conservando el tema Lizarbe",
+                tr("Desinstalar todas las Suites (--apps-only)"),
+                tr("Desinstala las aplicaciones conservando el tema Lizarbe"),
                 "action",
-                action_label=" Borrar Apps ",
+                action_label=tr(" Borrar Apps "),
             ),
             SectionItem(
                 "action:uninstall_all",
-                "Desinstalacion Completa (--all)",
-                "Elimina el tema Lizarbe y todas las suites de software",
+                tr("Desinstalacion Completa (--all)"),
+                tr("Elimina el tema Lizarbe y todas las suites de software"),
                 "action",
-                action_label=" Borrar Todo ",
+                action_label=tr(" Borrar Todo "),
             ),
             SectionItem(
                 "header:uninstall_suites",
-                "DESINSTALAR SUITES INDIVIDUALES",
-                "Remueve unicamente los paquetes de una suite especifica",
+                tr("DESINSTALAR SUITES INDIVIDUALES"),
+                tr("Remueve unicamente los paquetes de una suite especifica"),
                 "header",
             ),
             SectionItem(
                 "action:uninstall_2d",
-                "Desinstalar Suite 2D (--2d)",
-                "Krita, LibreSprite, Inkscape y Pinta",
+                tr("Desinstalar Suite 2D (--2d)"),
+                tr("Krita, LibreSprite, Inkscape y Pinta"),
                 "action",
-                action_label=" Desinstalar ",
+                action_label=tr(" Desinstalar "),
             ),
             SectionItem(
                 "action:uninstall_3d",
-                "Desinstalar Suite 3D & CAD (--3d)",
-                "Blender, FreeCAD, Godot y Blockbench",
+                tr("Desinstalar Suite 3D & CAD (--3d)"),
+                tr("Blender, FreeCAD, Godot y Blockbench"),
                 "action",
-                action_label=" Desinstalar ",
+                action_label=tr(" Desinstalar "),
             ),
             SectionItem(
                 "action:uninstall_dev",
-                "Desinstalar Suite Desarrollo (--dev)",
-                "VS Code, Lazygit, Docker y Lazydocker",
+                tr("Desinstalar Suite Desarrollo (--dev)"),
+                tr("VS Code, Lazygit, Docker y Lazydocker"),
                 "action",
-                action_label=" Desinstalar ",
+                action_label=tr(" Desinstalar "),
             ),
             SectionItem(
                 "action:uninstall_office",
-                "Desinstalar Suite Ofimatica (--office)",
-                "genOffice, ONLYOFFICE, LibreOffice, Obsidian y Xournal++",
+                tr("Desinstalar Suite Ofimatica (--office)"),
+                tr("genOffice, ONLYOFFICE, LibreOffice, Obsidian y Xournal++"),
                 "action",
-                action_label=" Desinstalar ",
+                action_label=tr(" Desinstalar "),
             ),
             SectionItem(
                 "action:uninstall_multimedia",
-                "Desinstalar Suite Multimedia (--multimedia)",
-                "Kdenlive, Shotcut, OBS Studio y Audacity",
+                tr("Desinstalar Suite Multimedia (--multimedia)"),
+                tr("Kdenlive, Shotcut, OBS Studio y Audacity"),
                 "action",
-                action_label=" Desinstalar ",
+                action_label=tr(" Desinstalar "),
             ),
             SectionItem(
                 "action:uninstall_webapps",
-                "Remover Webapps (--webapps)",
-                "Eliminar accesos de WhatsApp Web y YouTube",
+                tr("Remover Webapps (--webapps)"),
+                tr("Eliminar accesos de WhatsApp Web y YouTube"),
                 "action",
-                action_label=" Remover ",
+                action_label=tr(" Remover "),
             ),
         ]
 
@@ -812,7 +821,7 @@ class LizarbeTUI:
             res = subprocess.run(cmd, cwd=str(self.sys_mgr.repo_dir))
             ret_code = res.returncode
         except KeyboardInterrupt:
-            sys.stdout.write("\n\033[1;33m[AVISO] Operación interrumpida por el usuario.\033[0m\n")
+            sys.stdout.write("\n\033[1;33m" + tr("[AVISO] Operación interrumpida por el usuario.") + "\033[0m\n")
             ret_code = 130
         except Exception as exc:
             sys.stdout.write(f"\n\033[1;31m[ERROR] {exc}\033[0m\n")
@@ -821,10 +830,10 @@ class LizarbeTUI:
         if pause_after:
             sys.stdout.write(f"\n\033[1;38;2;{ar};{ag};{ab}m──────────────────────────────────────────────────────────\033[0m\n")
             if ret_code == 0:
-                sys.stdout.write("\033[1;32m✓ Operación finalizada con éxito.\033[0m ")
+                sys.stdout.write("\033[1;32m✓ " + tr("Operación finalizada con éxito.") + "\033[0m ")
             else:
-                sys.stdout.write(f"\033[1;33m[AVISO] La operación terminó con código {ret_code}.\033[0m ")
-            sys.stdout.write("Presiona [Enter] para volver al panel Lizarbe TUI...")
+                sys.stdout.write("\033[1;33m" + trf("[AVISO] La operación terminó con código {ret_code}.", ret_code=ret_code) + "\033[0m ")
+            sys.stdout.write(tr("Presiona [Enter] para volver al panel Lizarbe TUI..."))
             sys.stdout.flush()
             try:
                 sys.stdin.readline()
@@ -840,7 +849,7 @@ class LizarbeTUI:
     def run(self) -> None:
         """Ciclo principal TUI en modo crudo y ventana flotante rectangular vertical (680x960)."""
         if not sys.stdin.isatty():
-            print("Error: lizarbe TUI debe ejecutarse en una terminal TTY.")
+            print(tr("Error: lizarbe TUI debe ejecutarse en una terminal TTY."))
             return
 
         sys.stdout.write("\033]0;CENTRO LIZARBE\007\033]2;LIZARBE Theme & Suite\007")
@@ -872,7 +881,7 @@ class LizarbeTUI:
                     self.modal_state = None
                     self.dropdown_open = False
                     self.context_menu_open = False
-                    self.status_message = f"Error: {exc}"
+                    self.status_message = trf("Error: {exc}", exc=exc)
         finally:
             sys.stdout.write("\033[<1u\033[?1006l\033[?1003l\033[?1002l\033[?1000l\033[?7h\033[?25h\033[?1049l\033[0m")
             sys.stdout.flush()
@@ -898,9 +907,9 @@ class LizarbeTUI:
         local_ver = self.sys_mgr.get_local_git_hash()
         title_left = " CENTRO LIZARBE "
         unsaved_badge = " *PENDIENTE* | " if self.has_unsaved_changes() else ""
-        title_right = f"{unsaved_badge}v:{local_ver} | Tema: {self.theme_engine.current_theme} | q/Esc: Salir "
+        title_right = trf("{unsaved_badge}v:{local_ver} | Tema: {current_theme} | q/Esc: Salir ", unsaved_badge=unsaved_badge, local_ver=local_ver, current_theme=self.theme_engine.current_theme)
         if len(title_left) + len(title_right) > cols:
-            title_right = f"{unsaved_badge}Tema: {self.theme_engine.current_theme} | q/Esc: Salir "
+            title_right = trf("{unsaved_badge}Tema: {current_theme} | q/Esc: Salir ", unsaved_badge=unsaved_badge, current_theme=self.theme_engine.current_theme)
 
         space_len = max(0, cols - len(title_left) - len(title_right))
         header_line = (title_left + (" " * space_len) + title_right)[:cols]
@@ -922,23 +931,23 @@ class LizarbeTUI:
 
         # 3. Barra Inferior de Estado en fila exacta 'rows'
         if self.modal_state == "kdeconnect_guide":
-            keys_hint = " j/k/Flechas: Desplazar │ Enter/Espacio/Esc/q: Cerrar guía "
+            keys_hint = tr(" j/k/Flechas: Desplazar │ Enter/Espacio/Esc/q: Cerrar guía ")
         elif self.modal_state:
-            keys_hint = " Tab/Flechas: Seleccionar │ Enter/Espacio: Confirmar │ Esc: Cancelar "
+            keys_hint = tr(" Tab/Flechas: Seleccionar │ Enter/Espacio: Confirmar │ Esc: Cancelar ")
         elif self.context_menu_open:
-            keys_hint = " j/k/Flechas: Mover │ Enter/Espacio: Ejecutar │ Esc/q: Cerrar "
+            keys_hint = tr(" j/k/Flechas: Mover │ Enter/Espacio: Ejecutar │ Esc/q: Cerrar ")
         elif self.dropdown_open:
-            keys_hint = " j/k/Flechas: Navegar │ Enter/Espacio: Seleccionar │ Esc: Cerrar "
+            keys_hint = tr(" j/k/Flechas: Navegar │ Enter/Espacio: Seleccionar │ Esc: Cerrar ")
         else:
-            keys_hint = " Tab: Foco │ b/Esc: Panel izq │ m: Menú │ 1-9: Secciones │ Espacio: Conmutar │ a: Aplicar │ q: Salir "
+            keys_hint = tr(" Tab: Foco │ b/Esc: Panel izq │ m: Menú │ 1-9: Secciones │ Espacio: Conmutar │ a: Aplicar │ q: Salir ")
             if cols < 135:
-                keys_hint = " Tab: Foco │ b/Esc: Panel izq │ m: Menú │ 1-9: Secc │ a: Aplicar │ q: Salir "
+                keys_hint = tr(" Tab: Foco │ b/Esc: Panel izq │ m: Menú │ 1-9: Secc │ a: Aplicar │ q: Salir ")
             if cols < 115:
-                keys_hint = " Tab: Foco │ b: Panel izq │ m: Menú │ a: Aplicar │ q: Salir "
+                keys_hint = tr(" Tab: Foco │ b: Panel izq │ m: Menú │ a: Aplicar │ q: Salir ")
             if cols < 95:
-                keys_hint = " b: Panel izq │ m: Menú │ a: Aplicar │ q: Salir "
+                keys_hint = tr(" b: Panel izq │ m: Menú │ a: Aplicar │ q: Salir ")
             if cols < 75:
-                keys_hint = " b: Izq │ a: Aplicar │ q: Salir "
+                keys_hint = tr(" b: Izq │ a: Aplicar │ q: Salir ")
 
         max_status_w = max(8, cols - len(keys_hint) - 1)
         status_txt = f" {self.status_message}"[:max_status_w]
@@ -1130,7 +1139,7 @@ class LizarbeTUI:
         - Abajo (Instaladas): resalto en los bordes con borde grueso (┏━━━┓ / ┃...┃ / ┗━━━┛) y botón rojo [ Desinstalar ].
         """
         is_inst = item.is_installed
-        btn_label = " Desinstalar " if is_inst else "  Instalar  "
+        btn_label = tr(" Desinstalar ") if is_inst else tr("  Instalar  ")
         inner_btn_w = len(btn_label)
         btn_w = inner_btn_w + 2
 
@@ -1351,7 +1360,7 @@ class LizarbeTUI:
             sec_id = self.SECTIONS[self.current_section_idx][1]
             is_subdued_item = (
                 (getattr(item, "is_installed", False) and item.item_type == "action")
-                or any(k in item.action_label for k in ("Desinstalar", "No Instalado"))
+                or _label_has(item.action_label, "Desinstalar", "No Instalado")
                 or (sec_id == "kdeconnect" and not self.sys_mgr.is_kdeconnect_installed() and item.key not in ("action:install_kdeconnect_now", "action:kc_how_to_use"))
             )
             if is_sel:
@@ -1446,11 +1455,11 @@ class LizarbeTUI:
                 badge_col = "muted"
                 border_col = "muted"
             else:
-                if any(k in raw_lbl for k in ("Instalad", "Activo", "Al dia", "local")):
+                if _label_has(raw_lbl, "Instalad", "Activo", "Al dia", "local"):
                     badge_col = "green"
-                elif any(k in raw_lbl for k in ("Pendiente", "Advertencia")):
+                elif _label_has(raw_lbl, "Pendiente", "Advertencia"):
                     badge_col = "yellow"
-                elif any(k in raw_lbl for k in ("Error", "Falta", "No detectado")):
+                elif _label_has(raw_lbl, "Error", "Falta", "No detectado"):
                     badge_col = "red"
                 else:
                     badge_col = "bright_foreground" if is_sel else "foreground"
@@ -1469,7 +1478,7 @@ class LizarbeTUI:
             sec_id = self.SECTIONS[self.current_section_idx][1]
             is_subdued = (
                 getattr(item, "is_installed", False)
-                or any(k in raw_lbl for k in ("Desinstalar", "No Instalado"))
+                or _label_has(raw_lbl, "Desinstalar", "No Instalado")
                 or (sec_id == "kdeconnect" and not self.sys_mgr.is_kdeconnect_installed() and item.key not in ("action:install_kdeconnect_now", "action:kc_how_to_use"))
             )
 
@@ -1499,9 +1508,9 @@ class LizarbeTUI:
         self._button_row_range = (btn_top_screen_y, btn_top_screen_y + 2)
 
         buttons_spec = [
-            ("reset", 0, " Restablecer "),
-            ("cancel", 1, " Cancelar "),
-            ("save", 2, "  Aplicar  "),
+            ("reset", 0, tr(" Restablecer ")),
+            ("cancel", 1, tr(" Cancelar ")),
+            ("save", 2, tr("  Aplicar  ")),
         ]
 
         gap = 2
@@ -1657,8 +1666,8 @@ class LizarbeTUI:
             sec_id = self.SECTIONS[self.current_section_idx][1]
             if sec_id == "kdeconnect" and not self.sys_mgr.is_kdeconnect_installed():
                 self.context_menu_items = [
-                    ("action:install_kdeconnect_now", "  Instalar KDE Connect"),
-                    ("app:refresh_state", "󰑐  Recargar estado del equipo"),
+                    ("action:install_kdeconnect_now", tr("  Instalar KDE Connect")),
+                    ("app:refresh_state", tr("󰑐  Recargar estado del equipo")),
                 ]
                 self.context_menu_open = True
                 return
@@ -1666,8 +1675,8 @@ class LizarbeTUI:
             if item.item_type == "theme_card":
                 t_name = item.name
                 self.context_menu_items = [
-                    (f"theme:activate:{t_name}", f"󰸌  Activar '{t_name}' ahora"),
-                    ("theme:next_wp", "󰸉  Siguiente fondo"),
+                    (f"theme:activate:{t_name}", trf("󰸌  Activar '{t_name}' ahora", t_name=t_name)),
+                    ("theme:next_wp", tr("󰸉  Siguiente fondo")),
                     ("theme:apply_user", "󰑐  Reaplicar lizarbe-apply-user"),
                 ]
                 self.context_menu_open = True
@@ -1676,10 +1685,10 @@ class LizarbeTUI:
             if item.key.startswith("suite:"):
                 s_id = item.key.split(":", 1)[1]
                 self.context_menu_items = [
-                    (f"suite:install_now:{s_id}", f"  Instalar '{item.name}' ahora"),
-                    (f"suite:remove_now:{s_id}", f"󰆴  Desinstalar '{item.name}'"),
-                    ("item:toggle", "󰔡  Conmutar seleccion"),
-                    ("app:save", "󰄬  Aplicar cambios"),
+                    (f"suite:install_now:{s_id}", trf("  Instalar '{name}' ahora", name=item.name)),
+                    (f"suite:remove_now:{s_id}", trf("󰆴  Desinstalar '{name}'", name=item.name)),
+                    ("item:toggle", tr("󰔡  Conmutar seleccion")),
+                    ("app:save", tr("󰄬  Aplicar cambios")),
                 ]
                 self.context_menu_open = True
                 return
@@ -1689,8 +1698,8 @@ class LizarbeTUI:
                 is_inst = item.is_installed if item.item_type == "app_card" else self.sys_mgr.is_package_installed(pkg)
                 self.context_menu_items = [
                     (f"pkg:remove_now:{pkg}" if is_inst else f"pkg:install_now:{pkg}",
-                     f"󰆴  Desinstalar '{item.name}'" if is_inst else f"  Instalar '{item.name}' ahora"),
-                    ("app:refresh_state", "󰑐  Recargar estado del equipo"),
+                     trf("󰆴  Desinstalar '{name}'", name=item.name) if is_inst else trf("  Instalar '{name}' ahora", name=item.name)),
+                    ("app:refresh_state", tr("󰑐  Recargar estado del equipo")),
                 ]
                 self.context_menu_open = True
                 return
@@ -1699,10 +1708,10 @@ class LizarbeTUI:
                 dev_id = item.key.split(":", 1)[1]
                 is_p = item.is_installed
                 self.context_menu_items = [
-                    (f"kc:ping:{dev_id}", "󰂚  Enviar señal Ping"),
-                    (f"kc:ring:{dev_id}", "󰂞  Hacer sonar teléfono"),
-                    (f"kc:pair:{dev_id}", "󰄡  Vincular dispositivo" if not is_p else "󰄬  Ya vinculado"),
-                    ("action:open_kdeconnect_gui", "󰍹  Abrir Gestor KDE Connect"),
+                    (f"kc:ping:{dev_id}", tr("󰂚  Enviar señal Ping")),
+                    (f"kc:ring:{dev_id}", tr("󰂞  Hacer sonar teléfono")),
+                    (f"kc:pair:{dev_id}", tr("󰄡  Vincular dispositivo") if not is_p else tr("󰄬  Ya vinculado")),
+                    ("action:open_kdeconnect_gui", tr("󰍹  Abrir Gestor KDE Connect")),
                 ]
                 self.context_menu_open = True
                 return
@@ -1711,16 +1720,16 @@ class LizarbeTUI:
                 w_id = item.key.split(":", 1)[1]
                 is_inst = self.sys_mgr.is_webapp_installed(w_id)
                 self.context_menu_items = [
-                    (f"webapp:toggle_now:{w_id}", f"󰆴  Remover {w_id}" if is_inst else f"  Instalar {w_id}"),
-                    ("app:save", "󰄬  Aplicar cambios"),
+                    (f"webapp:toggle_now:{w_id}", trf("󰆴  Remover {w_id}", w_id=w_id) if is_inst else trf("  Instalar {w_id}", w_id=w_id)),
+                    ("app:save", tr("󰄬  Aplicar cambios")),
                 ]
                 self.context_menu_open = True
                 return
 
             self.context_menu_items = [
-                ("item:activate", f"󰏫  Accion en '{item.name[:20]}'"),
-                ("app:save", "󰄬  Aplicar cambios"),
-                ("app:reset_all", "󰑐  Recargar estado"),
+                ("item:activate", trf("󰏫  Accion en '{name}'", name=item.name[:20])),
+                ("app:save", tr("󰄬  Aplicar cambios")),
+                ("app:reset_all", tr("󰑐  Recargar estado")),
             ]
             self.context_menu_open = True
             return
@@ -1729,18 +1738,18 @@ class LizarbeTUI:
             s_idx = self._sidebar_click_map[y]
             s_title = self.SECTIONS[s_idx][3]
             self.context_menu_items = [
-                (f"sec:goto:{s_idx}", f"󰁔  Ir a {s_title}"),
-                ("app:save", "󰄬  Aplicar cambios"),
-                ("app:reset_all", "󰑐  Recargar estado"),
-                ("app:cancel", "󰅖  Salir"),
+                (f"sec:goto:{s_idx}", trf("󰁔  Ir a {s_title}", s_title=s_title)),
+                ("app:save", tr("󰄬  Aplicar cambios")),
+                ("app:reset_all", tr("󰑐  Recargar estado")),
+                ("app:cancel", tr("󰅖  Salir")),
             ]
             self.context_menu_open = True
             return
 
         self.context_menu_items = [
-            ("app:save", "󰄬  Aplicar cambios"),
-            ("app:reset_all", "󰑐  Recargar estado"),
-            ("app:cancel", "󰅖  Salir"),
+            ("app:save", tr("󰄬  Aplicar cambios")),
+            ("app:reset_all", tr("󰑐  Recargar estado")),
+            ("app:cancel", tr("󰅖  Salir")),
         ]
         self.context_menu_open = True
 
@@ -1760,10 +1769,10 @@ class LizarbeTUI:
             self.context_menu_y = min(rows - 10, max(3, self.current_section_idx * 2 + 2))
             s_title = self.SECTIONS[self.current_section_idx][3]
             self.context_menu_items = [
-                (f"sec:goto:{self.current_section_idx}", f"󰁔  Ir a {s_title}"),
-                ("app:save", "󰄬  Aplicar cambios"),
-                ("app:reset_all", "󰑐  Restablecer valores"),
-                ("app:cancel", "󰅖  Cancelar y salir"),
+                (f"sec:goto:{self.current_section_idx}", trf("󰁔  Ir a {s_title}", s_title=s_title)),
+                ("app:save", tr("󰄬  Aplicar cambios")),
+                ("app:reset_all", tr("󰑐  Restablecer valores")),
+                ("app:cancel", tr("󰅖  Cancelar y salir")),
             ]
             self.context_menu_open = True
             return
@@ -1771,8 +1780,8 @@ class LizarbeTUI:
         sec_id = self.SECTIONS[self.current_section_idx][1]
         if sec_id == "kdeconnect" and not self.sys_mgr.is_kdeconnect_installed():
             self.context_menu_items = [
-                ("action:install_kdeconnect_now", "  Instalar KDE Connect"),
-                ("app:refresh_state", "󰑐  Recargar estado del equipo"),
+                ("action:install_kdeconnect_now", tr("  Instalar KDE Connect")),
+                ("app:refresh_state", tr("󰑐  Recargar estado del equipo")),
             ]
             self.context_menu_open = True
             return
@@ -1789,8 +1798,8 @@ class LizarbeTUI:
         if item.item_type == "theme_card":
             t_name = item.name
             self.context_menu_items = [
-                (f"theme:activate:{t_name}", f"󰸌  Activar '{t_name}' ahora"),
-                ("theme:next_wp", "󰸉  Siguiente fondo"),
+                (f"theme:activate:{t_name}", trf("󰸌  Activar '{t_name}' ahora", t_name=t_name)),
+                ("theme:next_wp", tr("󰸉  Siguiente fondo")),
                 ("theme:apply_user", "󰑐  Reaplicar lizarbe-apply-user"),
             ]
             self.context_menu_open = True
@@ -1799,10 +1808,10 @@ class LizarbeTUI:
         if item.key.startswith("suite:"):
             s_id = item.key.split(":", 1)[1]
             self.context_menu_items = [
-                (f"suite:install_now:{s_id}", f"  Instalar '{item.name}' ahora"),
-                (f"suite:remove_now:{s_id}", f"󰆴  Desinstalar '{item.name}'"),
-                ("item:toggle", "󰔡  Conmutar seleccion"),
-                ("app:save", "󰄬  Aplicar cambios"),
+                (f"suite:install_now:{s_id}", trf("  Instalar '{name}' ahora", name=item.name)),
+                (f"suite:remove_now:{s_id}", trf("󰆴  Desinstalar '{name}'", name=item.name)),
+                ("item:toggle", tr("󰔡  Conmutar seleccion")),
+                ("app:save", tr("󰄬  Aplicar cambios")),
             ]
             self.context_menu_open = True
             return
@@ -1812,8 +1821,8 @@ class LizarbeTUI:
             is_inst = item.is_installed if item.item_type == "app_card" else self.sys_mgr.is_package_installed(pkg)
             self.context_menu_items = [
                 (f"pkg:remove_now:{pkg}" if is_inst else f"pkg:install_now:{pkg}",
-                 f"󰆴  Desinstalar '{item.name}'" if is_inst else f"  Instalar '{item.name}' ahora"),
-                ("app:refresh_state", "󰑐  Recargar estado del equipo"),
+                 trf("󰆴  Desinstalar '{name}'", name=item.name) if is_inst else trf("  Instalar '{name}' ahora", name=item.name)),
+                ("app:refresh_state", tr("󰑐  Recargar estado del equipo")),
             ]
             self.context_menu_open = True
             return
@@ -1822,10 +1831,10 @@ class LizarbeTUI:
             dev_id = item.key.split(":", 1)[1]
             is_p = item.is_installed
             self.context_menu_items = [
-                (f"kc:ping:{dev_id}", "󰂚  Enviar señal Ping"),
-                (f"kc:ring:{dev_id}", "󰂞  Hacer sonar teléfono"),
-                (f"kc:pair:{dev_id}", "󰄡  Vincular dispositivo" if not is_p else "󰄬  Ya vinculado"),
-                ("action:open_kdeconnect_gui", "󰍹  Abrir Gestor KDE Connect"),
+                (f"kc:ping:{dev_id}", tr("󰂚  Enviar señal Ping")),
+                (f"kc:ring:{dev_id}", tr("󰂞  Hacer sonar teléfono")),
+                (f"kc:pair:{dev_id}", tr("󰄡  Vincular dispositivo") if not is_p else tr("󰄬  Ya vinculado")),
+                ("action:open_kdeconnect_gui", tr("󰍹  Abrir Gestor KDE Connect")),
             ]
             self.context_menu_open = True
             return
@@ -1834,16 +1843,16 @@ class LizarbeTUI:
             w_id = item.key.split(":", 1)[1]
             is_inst = self.sys_mgr.is_webapp_installed(w_id)
             self.context_menu_items = [
-                (f"webapp:toggle_now:{w_id}", f"󰆴  Remover {w_id}" if is_inst else f"  Instalar {w_id}"),
-                ("app:save", "󰄬  Aplicar cambios"),
+                (f"webapp:toggle_now:{w_id}", trf("󰆴  Remover {w_id}", w_id=w_id) if is_inst else trf("  Instalar {w_id}", w_id=w_id)),
+                ("app:save", tr("󰄬  Aplicar cambios")),
             ]
             self.context_menu_open = True
             return
 
         self.context_menu_items = [
-            ("item:activate", f"󰏫  Accion en '{item.name[:20]}'"),
-            ("app:save", "󰄬  Aplicar cambios"),
-            ("app:reset_all", "󰑐  Recargar estado"),
+            ("item:activate", trf("󰏫  Accion en '{name}'", name=item.name[:20])),
+            ("app:save", tr("󰄬  Aplicar cambios")),
+            ("app:reset_all", tr("󰑐  Recargar estado")),
         ]
         self.context_menu_open = True
 
@@ -1912,36 +1921,36 @@ class LizarbeTUI:
         if not self.sys_mgr.is_kdeconnect_installed() and (
             act_id.startswith("kc:") or act_id.startswith("action:kc_")
         ):
-            self.status_message = "KDE Connect aún no está instalado en el equipo. Pulsa ' Instalar' abajo para comenzar."
+            self.status_message = tr("KDE Connect aún no está instalado en el equipo. Pulsa ' Instalar' abajo para comenzar.")
             return
 
         if act_id.startswith("kc:ping:"):
             d_id = act_id.split(":", 2)[-1]
             self.sys_mgr.ping_kdeconnect(d_id)
-            self.status_message = f"✓ Ping enviado al smartphone {d_id}."
+            self.status_message = trf("✓ Ping enviado al smartphone {d_id}.", d_id=d_id)
             return
         if act_id.startswith("kc:ring:"):
             d_id = act_id.split(":", 2)[-1]
             self.sys_mgr.ring_kdeconnect_device(d_id)
-            self.status_message = f"✓ Enviando alarma acústica a {d_id}..."
+            self.status_message = trf("✓ Enviando alarma acústica a {d_id}...", d_id=d_id)
             return
         if act_id.startswith("kc:pair:"):
             d_id = act_id.split(":", 2)[-1]
             self.sys_mgr.pair_kdeconnect_device(d_id)
-            self.status_message = f"✓ Solicitud de vinculación enviada a {d_id}."
+            self.status_message = trf("✓ Solicitud de vinculación enviada a {d_id}.", d_id=d_id)
             return
         if act_id == "app:refresh_state":
             self._refresh_all_state()
-            self.status_message = "✓ Estado del equipo actualizado."
+            self.status_message = tr("✓ Estado del equipo actualizado.")
             return
 
         if act_id.startswith("theme:activate:"):
             t_name = act_id.split(":", 2)[-1]
-            self.status_message = f"Activando tema '{t_name}'..."
+            self.status_message = trf("Activando tema '{t_name}'...", t_name=t_name)
             self.render()
             self.theme_engine.set_theme(t_name)
             self._refresh_all_state()
-            self.status_message = f"✓ Tema '{t_name}' activado."
+            self.status_message = trf("✓ Tema '{t_name}' activado.", t_name=t_name)
             return
         if act_id == "theme:next_wp":
             self._execute_action("action:next_wallpaper")
@@ -1955,27 +1964,27 @@ class LizarbeTUI:
             script_map = {s[0]: s[4] for s in self.sys_mgr.SUITES_SPEC}
             script_name = script_map.get(s_id, f"install-{s_id}.sh")
             self._run_interactive_command(
-                f"Instalando Suite {s_id.upper()}",
+                trf("Instalando Suite {upper}", upper=s_id.upper()),
                 ["bash", str(self.sys_mgr.repo_dir / "scripts" / script_name)],
             )
             self._refresh_all_state()
-            self.status_message = f"✓ Suite '{s_id}' procesada."
+            self.status_message = trf("✓ Suite '{s_id}' procesada.", s_id=s_id)
             return
 
         if act_id.startswith("suite:remove_now:"):
             s_id = act_id.split(":", 2)[-1]
             if s_id == "core":
                 self._prompt_command_modal(
-                    "REVERTIR TEMA LIZARBE",
-                    "Se desinstalara el tema Lizarbe y restaurara el oficial.",
-                    "¿Confirmar reversion del tema?",
+                    tr("REVERTIR TEMA LIZARBE"),
+                    tr("Se desinstalara el tema Lizarbe y restaurara el oficial."),
+                    tr("¿Confirmar reversion del tema?"),
                     ["bash", str(self.sys_mgr.repo_dir / "uninstall.sh"), "--theme-only"],
                 )
             else:
                 self._prompt_command_modal(
-                    f"DESINSTALAR SUITE {s_id.upper()}",
-                    f"Se desinstalaran los paquetes de la suite '{s_id}'.",
-                    "¿Confirmar desinstalacion?",
+                    trf("DESINSTALAR SUITE {upper}", upper=s_id.upper()),
+                    trf("Se desinstalaran los paquetes de la suite '{s_id}'.", s_id=s_id),
+                    tr("¿Confirmar desinstalacion?"),
                     ["bash", str(self.sys_mgr.repo_dir / "uninstall.sh"), f"--{s_id}"],
                 )
             return
@@ -1983,17 +1992,17 @@ class LizarbeTUI:
         if act_id.startswith("pkg:install_now:"):
             pkg = act_id.split(":", 2)[-1]
             helper = ["yay", "-S", "--needed", "--noconfirm", pkg] if shutil.which("yay") else ["sudo", "pacman", "-S", "--needed", "--noconfirm", pkg]
-            self._run_interactive_command(f"Instalando paquete {pkg}", helper)
+            self._run_interactive_command(trf("Instalando paquete {pkg}", pkg=pkg), helper)
             self._refresh_all_state()
-            self.status_message = f"✓ Paquete '{pkg}' instalado."
+            self.status_message = trf("✓ Paquete '{pkg}' instalado.", pkg=pkg)
             return
 
         if act_id.startswith("pkg:remove_now:"):
             pkg = act_id.split(":", 2)[-1]
             cmd = ["omarchy-pkg-drop", pkg] if shutil.which("omarchy-pkg-drop") else ["sudo", "pacman", "-Rns", "--noconfirm", pkg]
-            self._run_interactive_command(f"Desinstalando paquete {pkg}", cmd)
+            self._run_interactive_command(trf("Desinstalando paquete {pkg}", pkg=pkg), cmd)
             self._refresh_all_state()
-            self.status_message = f"✓ Paquete '{pkg}' desinstalado."
+            self.status_message = trf("✓ Paquete '{pkg}' desinstalado.", pkg=pkg)
             return
 
         if act_id.startswith("webapp:toggle_now:"):
@@ -2001,7 +2010,7 @@ class LizarbeTUI:
             is_inst = self.sys_mgr.is_webapp_installed(w_id)
             self.sys_mgr.install_or_remove_webapp(w_id, install=not is_inst)
             self._refresh_all_state()
-            self.status_message = f"✓ Webapp {w_id} {'eliminada' if is_inst else 'instalada'}."
+            self.status_message = trf("✓ Webapp {w_id} {v}.", w_id=w_id, v='eliminada' if is_inst else 'instalada')
             return
 
         if act_id.startswith("action:"):
@@ -2022,54 +2031,54 @@ class LizarbeTUI:
 
     def _get_kdeconnect_guide_lines(self) -> List[Tuple[str, str]]:
         return [
-            ("sec_hdr", "1. INSTALAR LA APP EN TU SMARTPHONE"),
-            ("text", "Descarga e instala la aplicación oficial KDE Connect:"),
+            ("sec_hdr", tr("1. INSTALAR LA APP EN TU SMARTPHONE")),
+            ("text", tr("Descarga e instala la aplicación oficial KDE Connect:")),
             ("box_top", "┌────────────────────────────────────────────────────────┐"),
-            ("box_item", "│ • Android: Google Play Store o F-Droid (código libre)  │"),
+            ("box_item", tr("│ • Android: Google Play Store o F-Droid (código libre)  │")),
             ("box_item", "│ • iOS (iPhone / iPad): App Store oficial               │"),
             ("box_item", "│   Busca exactamente: \"KDE Connect\"                     │"),
             ("box_bot", "└────────────────────────────────────────────────────────┘"),
             ("empty", ""),
-            ("sec_hdr", "2. CONECTAR AMBOS EQUIPOS A LA MISMA RED (WI-FI)"),
-            ("text", "Tu PC y tu smartphone deben estar conectados a la misma red:"),
+            ("sec_hdr", tr("2. CONECTAR AMBOS EQUIPOS A LA MISMA RED (WI-FI)")),
+            ("text", tr("Tu PC y tu smartphone deben estar conectados a la misma red:")),
             ("diagram", "       ┌──────────────┐                 ┌──────────┐        "),
-            ("diagram", "       │ Lizarbe / PC │     (((·)))     │  Móvil   │        "),
+            ("diagram", tr("       │ Lizarbe / PC │     (((·)))     │  Móvil   │        ")),
             ("diagram", "       │  ┌────────┐  │      Wi-Fi      │ ┌──────┐ │        "),
             ("diagram", "       │  │ KDE    │  │ <=============> │ │ KDE  │ │        "),
             ("diagram", "       │  │ Connect│  │    1714-1764    │ │ App  │ │        "),
             ("diagram", "       │  └────────┘  │                 │ └──────┘ │        "),
             ("diagram", "       │   [======]   │                 │   ( )    │        "),
             ("diagram", "       └──────────────┘                 └──────────┘        "),
-            ("bullet", "• Ambos dispositivos deben conectarse a la misma red local."),
-            ("bullet", "• Si no tienes Wi-Fi común, activa 'Zona Wi-Fi' en tu móvil."),
-            ("bullet", "• Desactiva temporalmente VPNs si bloquean el tráfico local."),
+            ("bullet", tr("• Ambos dispositivos deben conectarse a la misma red local.")),
+            ("bullet", tr("• Si no tienes Wi-Fi común, activa 'Zona Wi-Fi' en tu móvil.")),
+            ("bullet", tr("• Desactiva temporalmente VPNs si bloquean el tráfico local.")),
             ("empty", ""),
-            ("sec_hdr", "3. PUERTOS EN EL CORTAFUEGOS (UFW)"),
-            ("text", "Omarchy protege las conexiones entrantes con cortafuegos:"),
+            ("sec_hdr", tr("3. PUERTOS EN EL CORTAFUEGOS (UFW)")),
+            ("text", tr("Omarchy protege las conexiones entrantes con cortafuegos:")),
             ("box_top", "┌────────────────────────────────────────────────────────┐"),
-            ("box_item", "│ Si ves el aviso 'Cortafuegos Bloqueado' en este panel, │"),
-            ("box_item", "│ presiona el botón '[ Abrir Puertos ]' para autorizar   │"),
-            ("box_item", "│ el tráfico en los puertos 1714 a 1764 (TCP y UDP).     │"),
+            ("box_item", tr("│ Si ves el aviso 'Cortafuegos Bloqueado' en este panel, │")),
+            ("box_item", tr("│ presiona el botón '[ Abrir Puertos ]' para autorizar   │")),
+            ("box_item", tr("│ el tráfico en los puertos 1714 a 1764 (TCP y UDP).     │")),
             ("box_bot", "└────────────────────────────────────────────────────────┘"),
             ("empty", ""),
-            ("sec_hdr", "4. EMPAREJAR Y VINCULAR DISPOSITIVOS"),
-            ("text", "Pasos para enlazar tu teléfono con la PC:"),
+            ("sec_hdr", tr("4. EMPAREJAR Y VINCULAR DISPOSITIVOS")),
+            ("text", tr("Pasos para enlazar tu teléfono con la PC:")),
             ("box_top", "┌────────────────────────────────────────────────────────┐"),
-            ("box_item", "│ 1. Abre la aplicación KDE Connect en tu teléfono.      │"),
-            ("box_item", "│ 2. En 'Dispositivos disponibles', selecciona tu PC.    │"),
-            ("box_item", "│ 3. Pulsa en 'Solicitar vinculación'.                   │"),
-            ("box_item", "│ 4. Acepta la solicitud que aparecerá en tu PC.         │"),
-            ("box_item", "│    O en este panel, pulsa en tu móvil '[ Vincular ]'.  │"),
-            ("box_item", "│ 5. Una vez vinculado, el botón cambiará a [ Vinculado ]│"),
+            ("box_item", tr("│ 1. Abre la aplicación KDE Connect en tu teléfono.      │")),
+            ("box_item", tr("│ 2. En 'Dispositivos disponibles', selecciona tu PC.    │")),
+            ("box_item", tr("│ 3. Pulsa en 'Solicitar vinculación'.                   │")),
+            ("box_item", tr("│ 4. Acepta la solicitud que aparecerá en tu PC.         │")),
+            ("box_item", tr("│    O en este panel, pulsa en tu móvil '[ Vincular ]'.  │")),
+            ("box_item", tr("│ 5. Una vez vinculado, el botón cambiará a [ Vinculado ]│")),
             ("box_bot", "└────────────────────────────────────────────────────────┘"),
             ("empty", ""),
-            ("sec_hdr", "5. FUNCIONES Y VENTAJAS EN OMARCHY"),
+            ("sec_hdr", tr("5. FUNCIONES Y VENTAJAS EN OMARCHY")),
             ("box_top", "┌────────────────────────────────────────────────────────┐"),
-            ("box_item", "│ ✓ Portapapeles compartido en tiempo real (copiar/pegar)│"),
-            ("box_item", "│ ✓ Notificaciones de WhatsApp y llamadas en pantalla    │"),
-            ("box_item", "│ ✓ Envío rápido de fotos y archivos sin cables          │"),
-            ("box_item", "│ ✓ Control multimedia (pausar música) y ratón táctil    │"),
-            ("box_item", "│ ✓ Encontrar tu teléfono haciéndolo sonar desde la PC   │"),
+            ("box_item", tr("│ ✓ Portapapeles compartido en tiempo real (copiar/pegar)│")),
+            ("box_item", tr("│ ✓ Notificaciones de WhatsApp y llamadas en pantalla    │")),
+            ("box_item", tr("│ ✓ Envío rápido de fotos y archivos sin cables          │")),
+            ("box_item", tr("│ ✓ Control multimedia (pausar música) y ratón táctil    │")),
+            ("box_item", tr("│ ✓ Encontrar tu teléfono haciéndolo sonar desde la PC   │")),
             ("box_bot", "└────────────────────────────────────────────────────────┘"),
         ]
 
@@ -2104,7 +2113,7 @@ class LizarbeTUI:
         overlay.append(f"\033[{start_y};{start_x}H" + self.theme_engine.style("accent", "background", top_line, bold=True))
 
         # 2. Barra de título con indicador de desplazamiento
-        title = " GUIA DE CONEXION: OMARCHY & SMARTPHONE "
+        title = tr(" GUIA DE CONEXION: OMARCHY & SMARTPHONE ")
         if max_scroll > 0:
             scr_pct = f" [{self.guide_scroll_offset + 1}-{min(total_lines, self.guide_scroll_offset + content_h)}/{total_lines}] "
         else:
@@ -2270,29 +2279,29 @@ class LizarbeTUI:
         self._modal_button_click_map.clear()
 
         if self.modal_state == "confirm_section_change":
-            title = " CAMBIOS SIN APLICAR "
-            msg_1 = "Hay cambios pendientes en esta seccion."
-            msg_2 = "¿Aplicar antes de cambiar de seccion?"
+            title = tr(" CAMBIOS SIN APLICAR ")
+            msg_1 = tr("Hay cambios pendientes en esta seccion.")
+            msg_2 = tr("¿Aplicar antes de cambiar de seccion?")
             modal_btns = [
-                (0, " Descartar "),
-                (1, " Cancelar "),
-                (2, " Aplicar "),
+                (0, tr(" Descartar ")),
+                (1, tr(" Cancelar ")),
+                (2, tr(" Aplicar ")),
             ]
         elif self.modal_state == "confirm_command":
-            title = self._pending_cmd_title or " CONFIRMAR ACCION "
+            title = self._pending_cmd_title or tr(" CONFIRMAR ACCION ")
             msg_1 = self._pending_cmd_msg1
             msg_2 = self._pending_cmd_msg2
             modal_btns = [
-                (0, " Cancelar "),
-                (1, " Confirmar "),
+                (0, tr(" Cancelar ")),
+                (1, tr(" Confirmar ")),
             ]
         else:
-            title = " RECARGAR ESTADO "
-            msg_1 = "Se descartaran las selecciones pendientes"
-            msg_2 = "y se recargara el estado actual del sistema."
+            title = tr(" RECARGAR ESTADO ")
+            msg_1 = tr("Se descartaran las selecciones pendientes")
+            msg_2 = tr("y se recargara el estado actual del sistema.")
             modal_btns = [
-                (0, " Cancelar "),
-                (1, " Confirmar "),
+                (0, tr(" Cancelar ")),
+                (1, tr(" Confirmar ")),
             ]
 
         mw = min(max(54, len(msg_1) + 8, len(msg_2) + 8), cols - 4)
@@ -2374,7 +2383,7 @@ class LizarbeTUI:
         if state == "confirm_section_change":
             if choice_idx == 0:
                 self.settings = dict(self.saved_settings)
-                self.status_message = "Cambios descartados."
+                self.status_message = tr("Cambios descartados.")
                 if self.pending_section_idx is not None:
                     self.current_section_idx = self.pending_section_idx
                     sec_id = self.SECTIONS[self.current_section_idx][1]
@@ -2384,7 +2393,7 @@ class LizarbeTUI:
                     if self.pending_focus_content:
                         self.active_pane = "content"
             elif choice_idx == 1:
-                self.status_message = "Cambio de seccion cancelado."
+                self.status_message = tr("Cambio de seccion cancelado.")
             elif choice_idx == 2:
                 self.save_all()
                 if self.pending_section_idx is not None:
@@ -2407,20 +2416,20 @@ class LizarbeTUI:
                     self.sys_mgr.install_or_remove_webapp(w_id, install=(act == "install"))
                     self._refresh_all_state()
                     st = "instalada" if act == "install" else "removida"
-                    self.status_message = f"✓ Webapp {w_id} {st}."
+                    self.status_message = trf("✓ Webapp {w_id} {st}.", w_id=w_id, st=st)
                 else:
                     self._run_interactive_command(title, cmd)
                     self._refresh_all_state()
-                    self.status_message = f"✓ {title} completado."
+                    self.status_message = trf("✓ {title} completado.", title=title)
             else:
-                self.status_message = "Operacion cancelada."
+                self.status_message = tr("Operacion cancelada.")
 
         elif state == "confirm_reset":
             if choice_idx == 1:
                 self._refresh_all_state()
-                self.status_message = "✓ Estado recargado desde el sistema."
+                self.status_message = tr("✓ Estado recargado desde el sistema.")
             else:
-                self.status_message = "Recarga cancelada."
+                self.status_message = tr("Recarga cancelada.")
 
     # ==========================
     # LECTURA, ESCRITURA Y EJECUCIÓN DE ACCIONES
@@ -2439,27 +2448,27 @@ class LizarbeTUI:
             if wps:
                 self.settings["wallpaper"] = wps[0]
             self.section_items["theme"] = self._build_theme_section_items()
-            self.status_message = f"Tema '{val}' seleccionado (Pulsa 'Aplicar')."
+            self.status_message = trf("Tema '{val}' seleccionado (Pulsa 'Aplicar').", val=val)
             return
 
         if key == "wallpaper":
             self.settings["wallpaper"] = str(val)
-            self.status_message = f"Fondo '{val}' seleccionado (Pulsa 'Aplicar')."
+            self.status_message = trf("Fondo '{val}' seleccionado (Pulsa 'Aplicar').", val=val)
             return
 
         self.settings[key] = val
         if key.startswith("suite:"):
             s_id = key.split(":", 1)[1]
-            st = "marcada para instalar" if val else "marcada para desinstalar"
-            self.status_message = f"Suite '{s_id}' {st} (Pulsa 'Aplicar')."
+            st = tr("marcada para instalar") if val else tr("marcada para desinstalar")
+            self.status_message = trf("Suite '{s_id}' {st} (Pulsa 'Aplicar').", s_id=s_id, st=st)
         elif key.startswith("pkg:"):
             pkg = key.split(":", 1)[1]
-            st = "marcado para instalar" if val else "marcado para desinstalar"
-            self.status_message = f"Paquete '{pkg}' {st} (Pulsa 'Aplicar')."
+            st = tr("marcado para instalar") if val else tr("marcado para desinstalar")
+            self.status_message = trf("Paquete '{pkg}' {st} (Pulsa 'Aplicar').", pkg=pkg, st=st)
         elif key.startswith("webapp:"):
             w_id = key.split(":", 1)[1]
-            st = "marcada para instalar" if val else "marcada para remover"
-            self.status_message = f"Webapp '{w_id}' {st} (Pulsa 'Aplicar')."
+            st = tr("marcada para instalar") if val else tr("marcada para remover")
+            self.status_message = trf("Webapp '{w_id}' {st} (Pulsa 'Aplicar').", w_id=w_id, st=st)
 
     def has_unsaved_changes(self) -> bool:
         return self.settings != self.saved_settings
@@ -2494,7 +2503,7 @@ class LizarbeTUI:
             return
 
         if action_key.startswith("info:"):
-            self.status_message = "Verificando estado del sistema..."
+            self.status_message = tr("Verificando estado del sistema...")
             self.render()
             self.sys_mgr.check_remote_version()
             self._refresh_all_state()
@@ -2508,9 +2517,9 @@ class LizarbeTUI:
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
-                self.status_message = "✓ Fondo de pantalla rotado."
+                self.status_message = tr("✓ Fondo de pantalla rotado.")
             except Exception:
-                self.status_message = "No se encontró 'omarchy-theme-bg-next'."
+                self.status_message = tr("No se encontró 'omarchy-theme-bg-next'.")
             return
 
         if action_key == "action:open_nwg_look":
@@ -2523,18 +2532,18 @@ class LizarbeTUI:
                     )
                     self.status_message = "✓ Abriendo nwg-look..."
                 except Exception:
-                    self.status_message = "Error al iniciar nwg-look."
+                    self.status_message = tr("Error al iniciar nwg-look.")
             else:
-                self.status_message = "nwg-look no está instalado (instala Base del Sistema)."
+                self.status_message = tr("nwg-look no está instalado (instala Base del Sistema).")
             return
 
         if action_key == "action:apply_user_now":
-            self.status_message = "Aplicando configuracion de usuario Lizarbe..."
+            self.status_message = tr("Aplicando configuracion de usuario Lizarbe...")
             self.render()
             sel_t = str(self.settings.get("active_theme", self.theme_engine.current_theme))
             ok = self.sys_mgr.run_apply_user_script(target_theme=sel_t)
             self._refresh_all_state()
-            self.status_message = "✓ Tema, iconos y dotfiles de usuario aplicados." if ok else "[AVISO] Aplicado parcial."
+            self.status_message = tr("✓ Tema, iconos y dotfiles de usuario aplicados.") if ok else tr("[AVISO] Aplicado parcial.")
             return
 
         if action_key == "action:set_zen_default":
@@ -2542,7 +2551,7 @@ class LizarbeTUI:
                 subprocess.run(["omarchy-default-browser", "zen"], capture_output=True, timeout=5)
                 self.status_message = "✓ Zen Browser establecido como predeterminado."
             else:
-                self.status_message = "No se encontró 'omarchy-default-browser'."
+                self.status_message = tr("No se encontró 'omarchy-default-browser'.")
             return
 
         if action_key == "action:restart_shell":
@@ -2552,61 +2561,61 @@ class LizarbeTUI:
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
-                self.status_message = "✓ Reiniciando barra superior de Omarchy..."
+                self.status_message = tr("✓ Reiniciando barra superior de Omarchy...")
             except Exception:
-                self.status_message = "No se encontró 'omarchy-restart-shell'."
+                self.status_message = tr("No se encontró 'omarchy-restart-shell'.")
             return
 
         if action_key == "action:check_remote":
-            self.status_message = "Consultando el repositorio de Lizarbe..."
+            self.status_message = tr("Consultando el repositorio de Lizarbe...")
             self.render()
             ok, rem, sync_msg = self.sys_mgr.check_remote_version()
             self.section_items["status"] = self._build_status_section_items()
-            self.status_message = f"✓ {sync_msg}" if ok else "Sin conexion al repositorio."
+            self.status_message = f"✓ {sync_msg}" if ok else tr("Sin conexion al repositorio.")
             return
 
         if action_key == "action:update_github":
             self._run_interactive_command(
-                "Actualizando el sistema (omarchy update)",
+                tr("Actualizando el sistema (omarchy update)"),
                 ["omarchy-update"],
             )
             self._refresh_all_state()
-            self.status_message = "✓ Actualización de Lizarbe completada."
+            self.status_message = tr("✓ Actualización de Lizarbe completada.")
             return
 
         if action_key == "action:update_force":
             self._run_interactive_command(
-                "Reparando la integración de Lizarbe",
+                tr("Reparando la integración de Lizarbe"),
                 ["bash", "-c", "lizarbe-doctor --fix; lizarbe apply"],
             )
             self._refresh_all_state()
-            self.status_message = "✓ Reparación completada."
+            self.status_message = tr("✓ Reparación completada.")
             return
 
         # Perfiles de instalación rápida
         if action_key == "action:install_all":
             self._prompt_command_modal(
-                "INSTALAR TODO (--all)",
-                "Se instalara el tema base y todas las suites (incluyendo 3D).",
-                "¿Deseas iniciar la instalacion completa?",
+                tr("INSTALAR TODO (--all)"),
+                tr("Se instalara el tema base y todas las suites (incluyendo 3D)."),
+                tr("¿Deseas iniciar la instalacion completa?"),
                 ["bash", str(self.sys_mgr.repo_dir / "install.sh"), "--all"],
             )
             return
 
         if action_key == "action:install_no_3d":
             self._prompt_command_modal(
-                "INSTALAR SIN 3D (--no-3d)",
-                "Se instalara el tema base y todas las suites excepto 3D.",
-                "¿Deseas iniciar la instalacion?",
+                tr("INSTALAR SIN 3D (--no-3d)"),
+                tr("Se instalara el tema base y todas las suites excepto 3D."),
+                tr("¿Deseas iniciar la instalacion?"),
                 ["bash", str(self.sys_mgr.repo_dir / "install.sh"), "--no-3d"],
             )
             return
 
         if action_key == "action:install_core_only":
             self._prompt_command_modal(
-                "INSTALAR SOLO BASE (--core-only)",
-                "Se instalara unicamente el tema Lizarbe, iconos, GTK y dotfiles.",
-                "¿Deseas iniciar la instalacion base?",
+                tr("INSTALAR SOLO BASE (--core-only)"),
+                tr("Se instalara unicamente el tema Lizarbe, iconos, GTK y dotfiles."),
+                tr("¿Deseas iniciar la instalacion base?"),
                 ["bash", str(self.sys_mgr.repo_dir / "install.sh"), "--core-only"],
             )
             return
@@ -2614,48 +2623,48 @@ class LizarbeTUI:
         # Acciones de desinstalación con confirmación
         uninstall_map = {
             "action:uninstall_theme_only": (
-                "REVERTIR TEMA LIZARBE",
-                "Se eliminara el tema Lizarbe y se restaurara el tema oficial.",
+                tr("REVERTIR TEMA LIZARBE"),
+                tr("Se eliminara el tema Lizarbe y se restaurara el tema oficial."),
                 "--theme-only",
             ),
             "action:uninstall_apps_only": (
-                "DESINSTALAR TODAS LAS SUITES",
-                "Se desinstalaran todas las suites de software conservando el tema.",
+                tr("DESINSTALAR TODAS LAS SUITES"),
+                tr("Se desinstalaran todas las suites de software conservando el tema."),
                 "--apps-only",
             ),
             "action:uninstall_all": (
-                "DESINSTALACION COMPLETA",
-                "Se eliminara el tema Lizarbe y todas las suites de software.",
+                tr("DESINSTALACION COMPLETA"),
+                tr("Se eliminara el tema Lizarbe y todas las suites de software."),
                 "--all",
             ),
             "action:uninstall_2d": (
-                "DESINSTALAR SUITE 2D",
-                "Se desinstalaran Krita, LibreSprite, Inkscape y Pinta.",
+                tr("DESINSTALAR SUITE 2D"),
+                tr("Se desinstalaran Krita, LibreSprite, Inkscape y Pinta."),
                 "--2d",
             ),
             "action:uninstall_3d": (
-                "DESINSTALAR SUITE 3D & CAD",
-                "Se desinstalaran Blender, FreeCAD, Godot y Blockbench.",
+                tr("DESINSTALAR SUITE 3D & CAD"),
+                tr("Se desinstalaran Blender, FreeCAD, Godot y Blockbench."),
                 "--3d",
             ),
             "action:uninstall_dev": (
-                "DESINSTALAR SUITE DESARROLLO",
-                "Se desinstalaran VS Code, Lazygit, Docker y Lazydocker.",
+                tr("DESINSTALAR SUITE DESARROLLO"),
+                tr("Se desinstalaran VS Code, Lazygit, Docker y Lazydocker."),
                 "--dev",
             ),
             "action:uninstall_office": (
-                "DESINSTALAR SUITE OFIMATICA",
-                "Se desinstalaran genOffice, ONLYOFFICE, LibreOffice, Obsidian y Xournal++.",
+                tr("DESINSTALAR SUITE OFIMATICA"),
+                tr("Se desinstalaran genOffice, ONLYOFFICE, LibreOffice, Obsidian y Xournal++."),
                 "--office",
             ),
             "action:uninstall_multimedia": (
-                "DESINSTALAR SUITE MULTIMEDIA",
-                "Se desinstalaran Kdenlive, Shotcut, OBS Studio y Audacity.",
+                tr("DESINSTALAR SUITE MULTIMEDIA"),
+                tr("Se desinstalaran Kdenlive, Shotcut, OBS Studio y Audacity."),
                 "--multimedia",
             ),
             "action:uninstall_webapps": (
-                "REMOVER WEBAPPS",
-                "Se eliminaran los accesos de WhatsApp Web y YouTube.",
+                tr("REMOVER WEBAPPS"),
+                tr("Se eliminaran los accesos de WhatsApp Web y YouTube."),
                 "--webapps",
             ),
         }
@@ -2664,7 +2673,7 @@ class LizarbeTUI:
             self._prompt_command_modal(
                 u_title,
                 u_msg,
-                "¿Confirmas esta desinstalacion?",
+                tr("¿Confirmas esta desinstalacion?"),
                 ["bash", str(self.sys_mgr.repo_dir / "uninstall.sh"), "--yes", u_flag],
             )
             return
@@ -2676,17 +2685,17 @@ class LizarbeTUI:
             if is_inst:
                 rm_cmd = ["omarchy-pkg-drop", pkg] if shutil.which("omarchy-pkg-drop") else ["sudo", "pacman", "-Rns", "--noconfirm", pkg]
                 self._prompt_command_modal(
-                    f"DESINSTALAR {pkg.upper()}",
-                    f"Se desinstalará el paquete '{pkg}' del equipo.",
-                    "¿Deseas desinstalar esta aplicación?",
+                    trf("DESINSTALAR {upper}", upper=pkg.upper()),
+                    trf("Se desinstalará el paquete '{pkg}' del equipo.", pkg=pkg),
+                    tr("¿Deseas desinstalar esta aplicación?"),
                     rm_cmd,
                 )
             else:
                 helper = ["yay", "-S", "--needed", "--noconfirm", pkg] if shutil.which("yay") else ["sudo", "pacman", "-S", "--needed", "--noconfirm", pkg]
                 self._prompt_command_modal(
-                    f"INSTALAR {pkg.upper()}",
-                    f"Se descargará e instalará '{pkg}' en tu equipo.",
-                    "¿Deseas iniciar la instalación?",
+                    trf("INSTALAR {upper}", upper=pkg.upper()),
+                    trf("Se descargará e instalará '{pkg}' en tu equipo.", pkg=pkg),
+                    tr("¿Deseas iniciar la instalación?"),
                     helper,
                 )
             return
@@ -2697,16 +2706,16 @@ class LizarbeTUI:
             is_inst = self.sys_mgr.is_webapp_installed(w_id)
             if is_inst:
                 self._prompt_command_modal(
-                    f"REMOVER WEBAPP {w_id.upper()}",
-                    f"Se eliminará el acceso de '{w_id}' de tu sistema.",
-                    "¿Deseas desinstalar esta aplicación web?",
+                    trf("REMOVER WEBAPP {upper}", upper=w_id.upper()),
+                    trf("Se eliminará el acceso de '{w_id}' de tu sistema.", w_id=w_id),
+                    tr("¿Deseas desinstalar esta aplicación web?"),
                     ["internal_webapp", "remove", w_id],
                 )
             else:
                 self._prompt_command_modal(
-                    f"INSTALAR WEBAPP {w_id.upper()}",
-                    f"Se creará el acceso integrado de '{w_id}' en tu sistema.",
-                    "¿Deseas instalar esta aplicación web?",
+                    trf("INSTALAR WEBAPP {upper}", upper=w_id.upper()),
+                    trf("Se creará el acceso integrado de '{w_id}' en tu sistema.", w_id=w_id),
+                    tr("¿Deseas instalar esta aplicación web?"),
                     ["internal_webapp", "install", w_id],
                 )
             return
@@ -2722,7 +2731,7 @@ class LizarbeTUI:
                     "action:uninstall_kdeconnect",
                 )
             ):
-                self.status_message = "KDE Connect aún no está instalado en el equipo. Pulsa ' Instalar' abajo para comenzar."
+                self.status_message = tr("KDE Connect aún no está instalado en el equipo. Pulsa ' Instalar' abajo para comenzar.")
                 return
 
         if action_key == "action:kc_how_to_use":
@@ -2739,22 +2748,22 @@ class LizarbeTUI:
             dev_name = dev_info["name"] if dev_info else dev_id
             if is_paired:
                 ok = self.sys_mgr.ping_kdeconnect(dev_id)
-                self.status_message = f"✓ Dispositivo '{dev_name}' vinculado y sincronizado. Ping enviado con éxito." if ok else f"✓ Dispositivo '{dev_name}' vinculado."
+                self.status_message = trf("✓ Dispositivo '{dev_name}' vinculado y sincronizado. Ping enviado con éxito.", dev_name=dev_name) if ok else trf("✓ Dispositivo '{dev_name}' vinculado.", dev_name=dev_name)
             else:
                 ok = self.sys_mgr.pair_kdeconnect_device(dev_id)
                 if ok:
-                    self.status_message = f"✓ Solicitud de vinculación enviada a '{dev_name}'. Acepta en tu smartphone."
+                    self.status_message = trf("✓ Solicitud de vinculación enviada a '{dev_name}'. Acepta en tu smartphone.", dev_name=dev_name)
                 else:
-                    self.status_message = f"No se pudo enviar solicitud de vinculación a '{dev_name}'."
+                    self.status_message = trf("No se pudo enviar solicitud de vinculación a '{dev_name}'.", dev_name=dev_name)
             return
 
         # Acciones exclusivas de KDE Connect
         if action_key == "action:install_kdeconnect_now":
             helper = ["yay", "-S", "--needed", "--noconfirm", "kdeconnect"] if shutil.which("yay") else ["sudo", "pacman", "-S", "--needed", "--noconfirm", "kdeconnect"]
             self._prompt_command_modal(
-                "INSTALAR KDE CONNECT",
-                "Permite enlazar notificaciones, fotos, portapapeles y archivos.",
-                "¿Deseas instalar KDE Connect?",
+                tr("INSTALAR KDE CONNECT"),
+                tr("Permite enlazar notificaciones, fotos, portapapeles y archivos."),
+                tr("¿Deseas instalar KDE Connect?"),
                 helper,
             )
             return
@@ -2762,22 +2771,22 @@ class LizarbeTUI:
         if action_key == "action:uninstall_kdeconnect":
             rm_cmd = ["omarchy-pkg-drop", "kdeconnect"] if shutil.which("omarchy-pkg-drop") else ["sudo", "pacman", "-Rns", "--noconfirm", "kdeconnect"]
             self._prompt_command_modal(
-                "DESINSTALAR KDE CONNECT",
-                "Se desinstalará KDE Connect y se detendrá su demonio.",
-                "¿Confirmas la desinstalación?",
+                tr("DESINSTALAR KDE CONNECT"),
+                tr("Se desinstalará KDE Connect y se detendrá su demonio."),
+                tr("¿Confirmas la desinstalación?"),
                 rm_cmd,
             )
             return
 
         if action_key == "action:open_kdeconnect_gui":
             ok = self.sys_mgr.open_kdeconnect_gui()
-            self.status_message = "✓ Abriendo gestor KDE Connect..." if ok else "No se pudo abrir la interfaz gráfica de KDE Connect."
+            self.status_message = "✓ Abriendo gestor KDE Connect..." if ok else tr("No se pudo abrir la interfaz gráfica de KDE Connect.")
             return
 
         if action_key == "action:kc_toggle_daemon":
             self.sys_mgr.start_or_restart_kdeconnect()
             self._refresh_all_state()
-            self.status_message = "✓ Demonio de KDE Connect reiniciado."
+            self.status_message = tr("✓ Demonio de KDE Connect reiniciado.")
             return
 
         if action_key == "action:kc_ping_all":
@@ -2785,29 +2794,29 @@ class LizarbeTUI:
             devs = self.sys_mgr.get_kdeconnect_devices()
             paired = [d for d in devs if d.get("paired")]
             names = ", ".join(d["name"] for d in paired) if paired else "smartphone"
-            self.status_message = f"✓ Señal ping enviada a '{names}'." if ok else "No hay smartphone vinculado o en línea para enviar ping."
+            self.status_message = trf("✓ Señal ping enviada a '{names}'.", names=names) if ok else tr("No hay smartphone vinculado o en línea para enviar ping.")
             return
 
         if action_key == "action:kc_ring":
             ok = self.sys_mgr.ring_kdeconnect_device()
             devs = self.sys_mgr.get_kdeconnect_devices()
             paired = [d for d in devs if d.get("paired")]
-            target_name = paired[0]["name"] if paired else "teléfono"
-            self.status_message = f"✓ Alarma acústica enviada a '{target_name}'. Sonando..." if ok else "No hay smartphone vinculado o en línea."
+            target_name = paired[0]["name"] if paired else tr("teléfono")
+            self.status_message = trf("✓ Alarma acústica enviada a '{target_name}'. Sonando...", target_name=target_name) if ok else tr("No hay smartphone vinculado o en línea.")
             return
 
         if action_key == "action:kc_fix_firewall":
             cmd = ["bash", "-c", "sudo ufw allow 1714:1764/udp && sudo ufw allow 1714:1764/tcp && sudo ufw reload"]
             self._prompt_command_modal(
-                "DESBLOQUEAR PUERTOS DE CORTAFUEGOS",
-                "Se añadirán reglas a UFW (puertos 1714-1764 TCP/UDP) para KDE Connect.",
-                "¿Deseas autorizar la apertura de puertos en el cortafuegos?",
+                tr("DESBLOQUEAR PUERTOS DE CORTAFUEGOS"),
+                tr("Se añadirán reglas a UFW (puertos 1714-1764 TCP/UDP) para KDE Connect."),
+                tr("¿Deseas autorizar la apertura de puertos en el cortafuegos?"),
                 cmd,
             )
             return
 
         if action_key == "action:kc_refresh_devices":
-            self.status_message = "Buscando teléfonos KDE Connect en tu WiFi..."
+            self.status_message = tr("Buscando teléfonos KDE Connect en tu WiFi...")
             self.render()
             self.sys_mgr.start_or_restart_kdeconnect()
             self._refresh_all_state()
@@ -2816,20 +2825,20 @@ class LizarbeTUI:
             if not devs and not self.sys_mgr.is_kdeconnect_firewall_allowed():
                 self.status_message = "Cortafuegos UFW bloqueando puertos 1714-1764. Usa 'Abrir Puertos' arriba."
             elif devs:
-                self.status_message = f"✓ {len(devs)} dispositivo(s) detectado(s)."
+                self.status_message = trf("✓ {len} dispositivo(s) detectado(s).", len=len(devs))
             else:
-                self.status_message = "No se detectaron dispositivos. Abre KDE Connect en tu teléfono."
+                self.status_message = tr("No se detectaron dispositivos. Abre KDE Connect en tu teléfono.")
             return
 
     def save_all(self) -> None:
         """Aplica todos los cambios de tema, fondo, dotfiles, suites, paquetes y webapps."""
-        self.status_message = "Aplicando cambios..."
+        self.status_message = tr("Aplicando cambios...")
         self.render()
 
         # 1. Tema activo
         if self.settings.get("active_theme") != self.saved_settings.get("active_theme"):
             new_theme = str(self.settings.get("active_theme", "lizarbe"))
-            self.status_message = f"Activando tema '{new_theme}'..."
+            self.status_message = trf("Activando tema '{new_theme}'...", new_theme=new_theme)
             self.render()
             self.theme_engine.set_theme(new_theme)
 
@@ -2871,13 +2880,13 @@ class LizarbeTUI:
 
         if suites_to_install:
             self._run_interactive_command(
-                f"Instalando Suites ({', '.join(suites_to_install)})",
+                trf("Instalando Suites ({names})", names=', '.join(suites_to_install)),
                 ["bash", str(self.sys_mgr.repo_dir / "install.sh")] + suites_to_install,
             )
 
         if suites_to_remove:
             self._run_interactive_command(
-                f"Desinstalando Suites ({', '.join(suites_to_remove)})",
+                trf("Desinstalando Suites ({names})", names=', '.join(suites_to_remove)),
                 ["bash", str(self.sys_mgr.repo_dir / "uninstall.sh"), "--yes"] + suites_to_remove,
             )
 
@@ -2895,19 +2904,19 @@ class LizarbeTUI:
         if pkgs_to_install:
             helper = ["yay", "-S", "--needed", "--noconfirm"] if shutil.which("yay") else ["sudo", "pacman", "-S", "--needed", "--noconfirm"]
             self._run_interactive_command(
-                f"Instalando paquetes ({len(pkgs_to_install)})",
+                trf("Instalando paquetes ({n})", n=len(pkgs_to_install)),
                 helper + pkgs_to_install,
             )
 
         if pkgs_to_remove:
             rm_cmd = ["omarchy-pkg-drop"] if shutil.which("omarchy-pkg-drop") else ["sudo", "pacman", "-Rns", "--noconfirm"]
             self._run_interactive_command(
-                f"Desinstalando paquetes ({len(pkgs_to_remove)})",
+                trf("Desinstalando paquetes ({n})", n=len(pkgs_to_remove)),
                 rm_cmd + pkgs_to_remove,
             )
 
         self._refresh_all_state()
-        self.status_message = "✓ Cambios aplicados correctamente."
+        self.status_message = tr("✓ Cambios aplicados correctamente.")
 
     def cancel_changes(self) -> None:
         self.settings = dict(self.saved_settings)
@@ -2955,7 +2964,7 @@ class LizarbeTUI:
 
         if sec_id == "kdeconnect" and not self.sys_mgr.is_kdeconnect_installed():
             if item.key != "action:install_kdeconnect_now":
-                self.status_message = "KDE Connect aún no está instalado en el equipo. Pulsa ' Instalar' abajo para comenzar."
+                self.status_message = tr("KDE Connect aún no está instalado en el equipo. Pulsa ' Instalar' abajo para comenzar.")
                 return
 
         if item.item_type == "select" and item.options:
@@ -2979,7 +2988,7 @@ class LizarbeTUI:
 
         if sec_id == "kdeconnect" and not self.sys_mgr.is_kdeconnect_installed():
             if item.key not in ("action:install_kdeconnect_now", "action:kc_how_to_use"):
-                self.status_message = "KDE Connect aún no está instalado en el equipo. Pulsa ' Instalar' abajo para comenzar."
+                self.status_message = tr("KDE Connect aún no está instalado en el equipo. Pulsa ' Instalar' abajo para comenzar.")
                 return
 
         if item.item_type == "toggle":
@@ -3119,7 +3128,7 @@ class LizarbeTUI:
         if ch == b"\x1b" and len(ch) == 1:
             if self.active_pane != "sidebar":
                 self.active_pane = "sidebar"
-                self.status_message = "Foco en el panel izquierdo (Barra lateral)."
+                self.status_message = tr("Foco en el panel izquierdo (Barra lateral).")
                 return
             self.running = False
             return
@@ -3132,7 +3141,7 @@ class LizarbeTUI:
         # 'b', 'B', Backspace (\x7f, \x08), Ctrl+Left (\x1b[1;5D), Alt+Left (\x1b[1;3D)
         if ch in (b"b", b"B", b"\x7f", b"\x08", b"\x1b[1;5D", b"\x1b[1;3D"):
             self.active_pane = "sidebar"
-            self.status_message = "Foco en el panel izquierdo (Barra lateral)."
+            self.status_message = tr("Foco en el panel izquierdo (Barra lateral).")
             return
 
         # Menú contextual con tecla m / M o tecla Menú (\x1b[29~)
@@ -3538,7 +3547,7 @@ class LizarbeTUI:
                             if item.key in ("action:install_kdeconnect_now", "action:kc_how_to_use"):
                                 self._activate_current_item()
                             else:
-                                self.status_message = "KDE Connect aún no está instalado en el equipo. Pulsa ' Instalar' abajo para comenzar."
+                                self.status_message = tr("KDE Connect aún no está instalado en el equipo. Pulsa ' Instalar' abajo para comenzar.")
                             return
 
                         if item.item_type == "toggle":
