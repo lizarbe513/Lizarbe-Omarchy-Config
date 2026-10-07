@@ -1,0 +1,13 @@
+[lock]
+# Pantalla de bloqueo para el tema Lizarbe Arena
+background       = "#D8C79E"
+background-alpha = 0.90
+text             = "#1E1B16"
+placeholder      = "#7C828D"
+text-error       = "#A3171D"
+border           = "#B3171E"
+border-active    = "#A3171D"
+border-error     = "#A3171D"
+border-alpha     = 1.0
+selection        = "#B3171E"
+selection-alpha  = 0.25

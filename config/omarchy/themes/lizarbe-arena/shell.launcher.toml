@@ -1,0 +1,14 @@
+[launcher]
+# Tarjeta del lanzador rápido (Super + Espacio) para el tema Lizarbe Arena
+background                = "#E6D9B8"
+background-alpha          = 0.98
+text                      = "#1E1B16"
+border                    = "#B3171E"
+border-alpha              = 0.85
+scrim                     = "#000000"
+scrim-alpha               = 0.25
+selected-background       = "#B3171E"
+selected-background-alpha = 0.12
+selected-text             = "#A3171D"
+selected-border           = "#B3171E"
+selected-border-alpha     = 0.40
