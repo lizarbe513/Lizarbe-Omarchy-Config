@@ -5,7 +5,7 @@ Centro Lizarbe — panel TUI de identidad, software y actualizaciones para Omarc
 import subprocess
 
 # Versión del código; si está instalado el paquete, manda la del paquete.
-_SOURCE_VERSION = "0.4.5"
+_SOURCE_VERSION = "0.4.6"
 
 
 def _package_version() -> str:

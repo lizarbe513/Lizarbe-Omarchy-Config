@@ -1,0 +1,13 @@
+[lock]
+# Pantalla de bloqueo para el tema Minecraft Jardin Palido
+background       = "#1C1B1D"
+background-alpha = 0.90
+text             = "#EDE9E4"
+placeholder      = "#8E8890"
+text-error       = "#D9534A"
+border           = "#F2851E"
+border-active    = "#F0C56A"
+border-error     = "#D9534A"
+border-alpha     = 1.0
+selection        = "#F2851E"
+selection-alpha  = 0.25

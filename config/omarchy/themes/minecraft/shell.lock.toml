@@ -1,13 +1,13 @@
 [lock]
 # Pantalla de bloqueo para el tema Minecraft
-background       = "#FBEFEF"
+background       = "#F2F0E4"
 background-alpha = 0.90
-text             = "#3B2E33"
-placeholder      = "#8A7478"
-text-error       = "#B02E26"
+text             = "#221E18"
+placeholder      = "#6B6250"
+text-error       = "#B0433F"
 border           = "#4E8A2A"
 border-active    = "#2F6A14"
-border-error     = "#B02E26"
+border-error     = "#B0433F"
 border-alpha     = 1.0
 selection        = "#4E8A2A"
 selection-alpha  = 0.25

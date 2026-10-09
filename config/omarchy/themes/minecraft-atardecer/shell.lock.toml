@@ -1,0 +1,13 @@
+[lock]
+# Pantalla de bloqueo para el tema Minecraft Atardecer
+background       = "#1E1512"
+background-alpha = 0.90
+text             = "#FBEBD8"
+placeholder      = "#9C8570"
+text-error       = "#E2513C"
+border           = "#E8742A"
+border-active    = "#FFCB63"
+border-error     = "#E2513C"
+border-alpha     = 1.0
+selection        = "#E8742A"
+selection-alpha  = 0.25

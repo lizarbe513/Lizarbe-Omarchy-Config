@@ -1,0 +1,13 @@
+[lock]
+# Pantalla de bloqueo para el tema Minecraft Cuevas
+background       = "#15121E"
+background-alpha = 0.90
+text             = "#F0EBF8"
+placeholder      = "#8A82A0"
+text-error       = "#E5534B"
+border           = "#A46BE0"
+border-active    = "#F5D86A"
+border-error     = "#E5534B"
+border-alpha     = 1.0
+selection        = "#A46BE0"
+selection-alpha  = 0.25

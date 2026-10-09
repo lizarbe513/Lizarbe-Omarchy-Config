@@ -1,0 +1,14 @@
+[menu]
+# Tarjeta del menú, filas y estados de selección para el tema Minecraft Atardecer
+background                = "#2E211C"
+background-alpha          = 0.98
+text                      = "#F3DCC0"
+border                    = "#E8742A"
+border-alpha              = 0.85
+scrim                     = "#000000"
+scrim-alpha               = 0.5
+selected-background       = "#E8742A"
+selected-background-alpha = 0.18
+selected-text             = "#E8742A"
+selected-border           = "#E8742A"
+selected-border-alpha     = 0.40

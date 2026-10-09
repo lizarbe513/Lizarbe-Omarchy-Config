@@ -1,8 +1,8 @@
 [menu]
 # Tarjeta del menú, filas y estados de selección para el tema Minecraft
-background                = "#FFF7F7"
+background                = "#FAF9F2"
 background-alpha          = 0.98
-text                      = "#3B2E33"
+text                      = "#2F2A22"
 border                    = "#4E8A2A"
 border-alpha              = 0.85
 scrim                     = "#000000"
