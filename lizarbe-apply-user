@@ -48,7 +48,7 @@ fi
 
 # 2. Enlaces de los temas Lizarbe (oscuro, claro, arena y minecraft) para desarrollo y reactividad local
 mkdir -p "$USER_HOME/.config/omarchy/themes"
-for t in lizarbe lizarbe-light lizarbe-arena lizarbe-minecraft; do
+for t in lizarbe lizarbe-light lizarbe-arena minecraft; do
     if [[ -d "$THEME_SRC/config/omarchy/themes/$t" ]]; then
         ln -sfn "$THEME_SRC/config/omarchy/themes/$t" "$USER_HOME/.config/omarchy/themes/$t"
     fi
