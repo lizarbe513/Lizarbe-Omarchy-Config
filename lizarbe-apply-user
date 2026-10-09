@@ -46,9 +46,9 @@ if [[ -d "$USER_HOME/Projects" ]] && command -v gio &>/dev/null; then
     gio set -t string "$USER_HOME/Projects" metadata::custom-icon-name folder-projects 2>/dev/null || true
 fi
 
-# 2. Enlaces de los temas Lizarbe (oscuro, claro y arena) para desarrollo y reactividad local
+# 2. Enlaces de los temas Lizarbe (oscuro, claro, arena y minecraft) para desarrollo y reactividad local
 mkdir -p "$USER_HOME/.config/omarchy/themes"
-for t in lizarbe lizarbe-light lizarbe-arena; do
+for t in lizarbe lizarbe-light lizarbe-arena lizarbe-minecraft; do
     if [[ -d "$THEME_SRC/config/omarchy/themes/$t" ]]; then
         ln -sfn "$THEME_SRC/config/omarchy/themes/$t" "$USER_HOME/.config/omarchy/themes/$t"
     fi

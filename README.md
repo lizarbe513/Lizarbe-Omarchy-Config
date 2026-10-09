@@ -6,7 +6,7 @@ estado de las actualizaciones. Este repositorio produce dos paquetes del reposit
 | Paquete | Qué trae |
 | :--- | :--- |
 | `lizarbe-centro` | El **Centro Lizarbe** (TUI en Python) y la línea de comandos `lizarbe`. |
-| `lizarbe-tema` | Temas de Omarchy `lizarbe` (oscuro), `lizarbe-light` (claro) y `lizarbe-arena` (arena + rojo); iconos `Lizarbe-Red`; tema GTK `Darky`; branding, fastfetch y starship; `lizarbe-apply-user`. |
+| `lizarbe-tema` | Temas de Omarchy `lizarbe` (oscuro), `lizarbe-light` (claro), `lizarbe-arena` (arena + rojo) y `lizarbe-minecraft` (Overworld de día, claro); iconos `Lizarbe-Red`; tema GTK `Darky`; branding, fastfetch y starship; `lizarbe-apply-user`. |
 
 Los dos vienen preinstalados en la ISO de Lizarbe y se actualizan con `omarchy update`
 (se publican desde [Lizarbe-Paquetes](https://github.com/lizarbe513/Lizarbe-Paquetes) a partir de
